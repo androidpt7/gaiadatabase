@@ -93,7 +93,7 @@ export default function App() {
       'Vega': 'V', 'Antares': 'A', 'Gemini': 'G', 'Mizar': 'M', 'Sol': 'S', 'Draconis': 'D', 'Sirius': 'Si'
     };
     const typeMap: Record<string, string> = {
-      'Rapid': 'R', 'Long': 'L', 'Normal': 'N', 'Strong': 'St'
+      'Rapid': 'R', 'Long': 'L', 'Normal': '', 'Strong': 'St'
     };
     return `${sysMap[system] || ''} ${typeMap[type] || ''}`.trim();
   };
