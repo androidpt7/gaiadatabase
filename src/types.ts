@@ -4,12 +4,12 @@ export interface Planet {
   ring: number;
   enemy?: string;
   quarcs?: string;
-  lastCM?: string;
-  baseCoords?: string;
-  collapseTime?: string; // ISO String
-  collapseDays?: number;
-  collapseHours?: number;
-  respawnTime?: string; // ISO String
+  last_cm?: string;
+  base_coords?: string;
+  collapse_time?: string; // ISO String
+  collapse_days?: number;
+  collapse_hours?: number;
+  respawn_time?: string; // ISO String
   status?: 'Active' | 'Collapsed';
   editor?: string;
   requester?: string;
@@ -19,12 +19,12 @@ export type TechCategory = 'WU' | 'MU' | 'SU' | 'CU' | 'Amarna' | 'Soris' | 'Giz
 
 export interface Drop {
   id: string;
-  planetId: string;
+  planet_id: string;
   category: TechCategory;
-  techName: string;
+  tech_name: string;
   editor?: string;
   requester?: string;
-  updated_at: string; // ISO String
+  created_at: string; // ISO String
 }
 
 export interface UserProfile {

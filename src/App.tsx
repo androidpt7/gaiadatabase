@@ -47,9 +47,9 @@ export default function App() {
   const [isSpreadsheetMode, setIsSpreadsheetMode] = useState(true);
   
   const [newDrop, setNewDrop] = useState({ 
-    planetId: '', 
+    planet_id: '', 
     category: 'WU' as TechCategory, 
-    techName: '',
+    tech_name: '',
     requester: ''
   });
 
@@ -153,7 +153,7 @@ export default function App() {
     const { data } = await supabase
       .from('drops')
       .select('*')
-      .order('updated_at', { ascending: false });
+      .order('created_at', { ascending: false });
     if (data) setDrops(data as Drop[]);
   };
 
@@ -259,8 +259,8 @@ export default function App() {
     });
   }, [planets, selectedRing, searchTerm]);
 
-  const getDropsForPlanet = (planetId: string, category: TechCategory) => {
-    return drops.filter(d => d.planetId === planetId && d.category === category);
+  const getDropsForPlanet = (planet_id: string, category: TechCategory) => {
+    return drops.filter(d => d.planet_id === planet_id && d.category === category);
   };
 
   const [newPlanet, setNewPlanet] = useState({
@@ -288,16 +288,16 @@ export default function App() {
 
   const handleAddDrop = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newDrop.planetId || !newDrop.techName) return;
+    if (!user || !newDrop.planet_id || !newDrop.tech_name) return;
 
     try {
       await supabase.from('drops').insert([{
         ...newDrop,
         editor: profile?.uid || user.email,
-        updated_at: new Date().toISOString()
+        created_at: new Date().toISOString()
       }]);
       setShowAddModal(false);
-      setNewDrop({ planetId: '', category: 'WU', techName: '', requester: '' });
+      setNewDrop({ planet_id: '', category: 'WU', tech_name: '', requester: '' });
     } catch (err) {
       console.error("Error adding drop:", err);
     }
@@ -326,26 +326,26 @@ export default function App() {
     }
   };
 
-  const updatePlanetField = async (planetId: string, field: string, value: any) => {
+  const updatePlanetField = async (planet_id: string, field: string, value: any) => {
     const { error } = await supabase
       .from('planets')
       .update({ [field]: value })
-      .eq('id', planetId);
+      .eq('id', planet_id);
     if (error) console.error(error);
     else fetchPlanets();
   };
 
-  const updateTechField = async (planetId: string, category: TechCategory, value: string) => {
+  const updateTechField = async (planet_id: string, category: TechCategory, value: string) => {
     const techNames = value.split('\n').filter(t => t.trim() !== '');
-    await supabase.from('drops').delete().eq('planetId', planetId).eq('category', category);
+    await supabase.from('drops').delete().eq('planet_id', planet_id).eq('category', category);
     
     if (techNames.length > 0) {
       const newDrops = techNames.map(name => ({
-        planetId,
+        planet_id,
         category,
-        techName: name.trim(),
+        tech_name: name.trim(),
         editor: profile?.uid || user?.email,
-        updated_at: new Date().toISOString()
+        created_at: new Date().toISOString()
       }));
       await supabase.from('drops').insert(newDrops);
     }
@@ -374,7 +374,7 @@ export default function App() {
       { name: "Mitomus", ring: 5, enemy: "Ancient", status: "Active" },
       { name: "Ivia", ring: 5, enemy: "Ancient", status: "Collapsed" },
       { name: "Monrianak", ring: 4, enemy: "Methanoid", status: "Active" },
-      { name: "Eqdocor", ring: 4, enemy: "Pirates", lastCM: "Resource War", status: "Active" },
+      { name: "Eqdocor", ring: 4, enemy: "Pirates", last_cm: "Resource War", status: "Active" },
     ];
 
     await supabase.from('planets').insert(initialPlanets);
@@ -562,7 +562,7 @@ export default function App() {
                     
                     {CATEGORIES.map(cat => {
                       const planetDrops = getDropsForPlanet(planet.id, cat);
-                      const techValue = planetDrops.map(d => d.techName).join('\n');
+                      const techValue = planetDrops.map(d => d.tech_name).join('\n');
                       
                       return (
                         <td key={cat} className="border border-[#444] p-1 align-top">
@@ -577,7 +577,7 @@ export default function App() {
                             <div className="flex flex-col gap-0.5">
                               {planetDrops.map(drop => (
                                 <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate">
-                                  {drop.techName}
+                                  {drop.tech_name}
                                 </div>
                               ))}
                             </div>
@@ -618,12 +618,12 @@ export default function App() {
                       {isEditing ? (
                         <input 
                           type="text" 
-                          value={planet.lastCM || ''}
-                          onChange={(e) => updatePlanetField(planet.id, 'lastCM', e.target.value)}
+                          value={planet.last_cm || ''}
+                          onChange={(e) => updatePlanetField(planet.id, 'last_cm', e.target.value)}
                           className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
                         />
                       ) : (
-                        <div className="text-center text-[10px]">{planet.lastCM || '-'}</div>
+                        <div className="text-center text-[10px]">{planet.last_cm || '-'}</div>
                       )}
                     </td>
 
@@ -631,12 +631,12 @@ export default function App() {
                       {isEditing ? (
                         <input 
                           type="text" 
-                          value={planet.baseCoords || ''}
-                          onChange={(e) => updatePlanetField(planet.id, 'baseCoords', e.target.value)}
+                          value={planet.base_coords || ''}
+                          onChange={(e) => updatePlanetField(planet.id, 'base_coords', e.target.value)}
                           className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
                         />
                       ) : (
-                        <div className="text-center text-[10px]">{planet.baseCoords || '-'}</div>
+                        <div className="text-center text-[10px]">{planet.base_coords || '-'}</div>
                       )}
                     </td>
 
@@ -647,8 +647,8 @@ export default function App() {
                             <span className="text-[7px] opacity-50 uppercase w-6">Days</span>
                             <input 
                               type="number" 
-                              value={planet.collapseDays || 0}
-                              onChange={(e) => updatePlanetField(planet.id, 'collapseDays', parseInt(e.target.value) || 0)}
+                              value={planet.collapse_days || 0}
+                              onChange={(e) => updatePlanetField(planet.id, 'collapse_days', parseInt(e.target.value) || 0)}
                               className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded text-[9px] focus:outline-none h-4"
                               placeholder="0"
                             />
@@ -657,8 +657,8 @@ export default function App() {
                             <span className="text-[7px] opacity-50 uppercase w-6">Hours</span>
                             <input 
                               type="number" 
-                              value={planet.collapseHours || 0}
-                              onChange={(e) => updatePlanetField(planet.id, 'collapseHours', parseInt(e.target.value) || 0)}
+                              value={planet.collapse_hours || 0}
+                              onChange={(e) => updatePlanetField(planet.id, 'collapse_hours', parseInt(e.target.value) || 0)}
                               className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded text-[9px] focus:outline-none h-4"
                               placeholder="0"
                             />
@@ -666,10 +666,10 @@ export default function App() {
                         </div>
                       ) : (
                         <div className="text-center">
-                          {planet.collapseDays || planet.collapseHours ? (
+                          {planet.collapse_days || planet.collapse_hours ? (
                             <div className="flex flex-col text-[9px]">
-                              {planet.collapseDays ? <span>{planet.collapseDays}d</span> : null}
-                              {planet.collapseHours ? <span>{planet.collapseHours}h</span> : null}
+                              {planet.collapse_days ? <span>{planet.collapse_days}d</span> : null}
+                              {planet.collapse_hours ? <span>{planet.collapse_hours}h</span> : null}
                             </div>
                           ) : '-'}
                         </div>
@@ -680,12 +680,12 @@ export default function App() {
                       {isEditing ? (
                         <input 
                           type="text" 
-                          value={planet.respawnTime || ''}
-                          onChange={(e) => updatePlanetField(planet.id, 'respawnTime', e.target.value)}
+                          value={planet.respawn_time || ''}
+                          onChange={(e) => updatePlanetField(planet.id, 'respawn_time', e.target.value)}
                           className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
                         />
                       ) : (
-                        <div className="text-center text-[10px]">{planet.respawnTime || '-'}</div>
+                        <div className="text-center text-[10px]">{planet.respawn_time || '-'}</div>
                       )}
                     </td>
 
@@ -908,8 +908,8 @@ export default function App() {
                   <div>
                     <label className="text-[10px] uppercase opacity-50 block mb-1">Planet</label>
                     <select 
-                      required value={newDrop.planetId}
-                      onChange={(e) => setNewDrop(prev => ({ ...prev, planetId: e.target.value }))}
+                      required value={newDrop.planet_id}
+                      onChange={(e) => setNewDrop(prev => ({ ...prev, planet_id: e.target.value }))}
                       className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
                     >
                       <option value="">Select Planet...</option>
@@ -929,8 +929,8 @@ export default function App() {
                   <div>
                     <label className="text-[10px] uppercase opacity-50 block mb-1">Tech Name</label>
                     <input 
-                      type="text" required value={newDrop.techName}
-                      onChange={(e) => setNewDrop(prev => ({ ...prev, techName: e.target.value }))}
+                      type="text" required value={newDrop.tech_name}
+                      onChange={(e) => setNewDrop(prev => ({ ...prev, tech_name: e.target.value }))}
                       className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
                     />
                   </div>
@@ -999,8 +999,8 @@ export default function App() {
                   <div>
                     <label className="text-[10px] uppercase opacity-50 block mb-1">Base Coords</label>
                     <input 
-                      type="text" value={editingPlanet.baseCoords || ''}
-                      onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, baseCoords: e.target.value }) : null)}
+                      type="text" value={editingPlanet.base_coords || ''}
+                      onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, base_coords: e.target.value }) : null)}
                       className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
                     />
                   </div>
