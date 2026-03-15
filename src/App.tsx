@@ -25,6 +25,38 @@ const CATEGORIES: TechCategory[] = ['WU', 'MU', 'SU', 'CU', 'Amarna', 'Soris', '
 const ENEMY_OPTIONS = ['-', 'Ancient', 'Mantis', 'Pirates', 'Methanoid', 'Imperials'];
 const QUARCS_OPTIONS = ['-', 'Ecoglyte', 'Oolyte', 'Dolomyte', 'Kenyte', 'Clay'];
 
+// Mapeamento de ícones
+const TECH_ICONS: Record<string, string> = {
+  'Blasters': 'https://github.com/androidpt7/itempg/blob/main/icons/blaster.png?raw=true',
+  'Collectors': 'https://github.com/androidpt7/itempg/blob/main/icons/collector.png?raw=true',
+  'Repair Droids': 'https://github.com/androidpt7/itempg/blob/main/icons/repair_droid.png?raw=true',
+  'Afterburners': 'https://github.com/androidpt7/itempg/blob/main/icons/afterburner.png?raw=true',
+  'Rockets': 'https://github.com/androidpt7/itempg/blob/main/icons/rockets.png?raw=true',
+  'Shields': 'https://github.com/androidpt7/itempg/blob/main/icons/shield.png?raw=true',
+  'Repair Targets': 'https://github.com/androidpt7/itempg/blob/main/icons/repair_target.png?raw=true',
+  'Speed Actuators': 'https://github.com/androidpt7/itempg/blob/main/icons/speed_actuator.png?raw=true',
+  'Aim Computers': 'https://github.com/androidpt7/itempg/blob/main/icons/aim_computer.png?raw=true',
+  'Taunts': 'https://github.com/androidpt7/itempg/blob/main/icons/taunt.png?raw=true',
+  'Protectors': 'https://github.com/androidpt7/itempg/blob/main/icons/protector.png?raw=true',
+  'Stun Charges': 'https://github.com/androidpt7/itempg/blob/main/icons/stun_charge.png?raw=true',
+  'Perforators': 'https://github.com/androidpt7/itempg/blob/main/icons/perforator.png?raw=true',
+  'Aim Scramblers': 'https://github.com/androidpt7/itempg/blob/main/icons/aim_scrambler.png?raw=true',
+  'Repair Fields': 'https://github.com/androidpt7/itempg/blob/main/icons/repair_field.png?raw=true',
+  'Aggro Beacons': 'https://github.com/androidpt7/itempg/blob/main/icons/aggro_beacon.png?raw=true',
+  'Thermoblasts': 'https://github.com/androidpt7/itempg/blob/main/icons/thermoblast.png?raw=true',
+  'Aggro Bombs': 'https://github.com/androidpt7/itempg/blob/main/icons/aggro_bomb.png?raw=true',
+  'Materializers': 'https://github.com/androidpt7/itempg/blob/main/icons/materializer.png?raw=true',
+  'Stun Domes': 'https://github.com/androidpt7/itempg/blob/main/icons/stun_dome.png?raw=true',
+  'Sniper Blasters': 'https://github.com/androidpt7/itempg/blob/main/icons/sniper_blaster.png?raw=true',
+  'Attack Droids': 'https://github.com/androidpt7/itempg/blob/main/icons/attack_droid.png?raw=true',
+  'Orbital Strikes': 'https://github.com/androidpt7/itempg/blob/main/icons/orbital.png?raw=true',
+  'Attack Charges': 'https://github.com/androidpt7/itempg/blob/main/icons/attack_charge.png?raw=true',
+  'Repair Turrets': 'https://github.com/androidpt7/itempg/blob/main/icons/repair_turret.png?raw=true',
+  'Attack Turrets': 'https://github.com/androidpt7/itempg/blob/main/icons/attack_turret.png?raw=true',
+  'Sticky Bombs': 'https://github.com/androidpt7/itempg/blob/main/icons/sticky_bomb.png?raw=true',
+  'Minelayers': 'https://github.com/androidpt7/itempg/blob/main/icons/mine.png?raw=true',
+};
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -50,7 +82,10 @@ export default function App() {
     planet_id: '', 
     category: 'WU' as TechCategory, 
     tech_name: '',
-    requester: ''
+    requester: '',
+    system: '',
+    item: '',
+    type: ''
   });
 
   // Auth Listener
@@ -288,7 +323,7 @@ export default function App() {
 
   const handleAddDrop = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newDrop.planet_id || !newDrop.tech_name) return;
+    if (!user || !newDrop.planet_id || !newDrop.tech_name || !newDrop.system || !newDrop.type) return;
 
     try {
       await supabase.from('drops').insert([{
@@ -297,7 +332,7 @@ export default function App() {
         created_at: new Date().toISOString()
       }]);
       setShowAddModal(false);
-      setNewDrop({ planet_id: '', category: 'WU', tech_name: '', requester: '' });
+      setNewDrop({ planet_id: '', category: 'WU', tech_name: '', requester: '', system: '', item: '', type: '' });
     } catch (err) {
       console.error("Error adding drop:", err);
     }
@@ -590,10 +625,18 @@ export default function App() {
                               rows={cat === 'Amarna' || cat === 'Soris' || cat === 'Giza' ? 3 : 1}
                               className={`w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none focus:border-[#90EE90] resize-none text-[10px] leading-tight ${['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5 ? 'opacity-50 cursor-not-allowed' : ''} text-center`}
                             />
+
+
+// ... (rest of the file)
+
+
                           ) : (
                             <div className="flex flex-col items-center justify-center gap-0.5 h-full">
                               {planetDrops.map(drop => (
-                                <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate w-full">
+                                <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate w-full flex items-center gap-1">
+                                  {TECH_ICONS[drop.tech_name] && (
+                                    <img src={TECH_ICONS[drop.tech_name]} alt={drop.tech_name} className="w-3 h-3 object-contain" referrerPolicy="no-referrer" />
+                                  )}
                                   {drop.tech_name}
                                 </div>
                               ))}
@@ -944,7 +987,29 @@ export default function App() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Tech Name</label>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">System</label>
+                    <select 
+                      required value={newDrop.system}
+                      onChange={(e) => setNewDrop(prev => ({ ...prev, system: e.target.value }))}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                    >
+                      <option value="">Select System...</option>
+                      {['Vega', 'Antares', 'Gemini', 'Mizar', 'Sol', 'Draconis', 'Sirius'].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Type</label>
+                    <select 
+                      required value={newDrop.type}
+                      onChange={(e) => setNewDrop(prev => ({ ...prev, type: e.target.value }))}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                    >
+                      <option value="">Select Type...</option>
+                      {['Rapid', 'Long', 'Normal', 'Strong'].map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Item</label>
                     <input 
                       type="text" required value={newDrop.tech_name}
                       onChange={(e) => setNewDrop(prev => ({ ...prev, tech_name: e.target.value }))}
