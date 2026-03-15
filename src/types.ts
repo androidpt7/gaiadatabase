@@ -26,5 +26,7 @@ export interface Drop {
 export interface UserProfile {
   uid: string;
   email: string;
+  nickname: string;
   role: 'admin' | 'user';
+  approved: boolean;
 }

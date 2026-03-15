@@ -26,12 +26,19 @@ const CATEGORIES: TechCategory[] = ['WU', 'MU', 'SU', 'CU', 'Amarna', 'Soris', '
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
   const [planets, setPlanets] = useState<Planet[]>([]);
   const [drops, setDrops] = useState<Drop[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRing, setSelectedRing] = useState<number | 'all'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [nickname, setNickname] = useState('');
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
   const [editingPlanet, setEditingPlanet] = useState<Planet | null>(null);
   
   const [newDrop, setNewDrop] = useState({ 
@@ -69,10 +76,15 @@ export default function App() {
       // Create profile if not exists
       const { data: userSession } = await supabase.auth.getSession();
       const email = userSession.session?.user.email || '';
+      const storedNickname = userSession.session?.user.user_metadata?.nickname || email.split('@')[0];
+      const isAdmin = email === 'elton.duarteboss7@gmail.com' || storedNickname.toLowerCase() === 'admin';
+      
       const newProfile: UserProfile = {
         uid,
         email,
-        role: email === 'elton.duarteboss7@gmail.com' ? 'admin' : 'user'
+        nickname: storedNickname,
+        role: isAdmin ? 'admin' : 'user',
+        approved: isAdmin
       };
       await supabase.from('profiles').insert([newProfile]);
       setProfile(newProfile);
@@ -80,6 +92,23 @@ export default function App() {
       setProfile(data as UserProfile);
     }
   };
+
+  const fetchAllProfiles = async () => {
+    if (profile?.role !== 'admin') return;
+    const { data } = await supabase.from('profiles').select('*');
+    if (data) setAllProfiles(data as UserProfile[]);
+  };
+
+  useEffect(() => {
+    if (profile?.role === 'admin') {
+      fetchAllProfiles();
+      const sub = supabase
+        .channel('profiles_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchAllProfiles)
+        .subscribe();
+      return () => { sub.unsubscribe(); };
+    }
+  }, [profile]);
 
   // Data Listeners
   useEffect(() => {
@@ -119,8 +148,42 @@ export default function App() {
     if (data) setDrops(data as Drop[]);
   };
 
-  const handleLogin = () => supabase.auth.signInWithOAuth({ provider: 'google' });
+  const handleLogin = () => setShowAuthModal(true);
   const handleLogout = () => supabase.auth.signOut();
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    const fakeEmail = `${nickname.toLowerCase().trim()}@gaia.db`;
+    try {
+      if (authMode === 'signup') {
+        const { error } = await supabase.auth.signUp({ 
+          email: fakeEmail, 
+          password,
+          options: {
+            data: { nickname }
+          }
+        });
+        if (error) throw error;
+        setAuthMode('login');
+        setAuthError('Account created! Please log in.');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ 
+          email: fakeEmail, 
+          password 
+        });
+        if (error) throw error;
+        setShowAuthModal(false);
+      }
+    } catch (err: any) {
+      setAuthError(err.message);
+    }
+  };
+
+  const approveUser = async (uid: string) => {
+    if (profile?.role !== 'admin') return;
+    await supabase.from('profiles').update({ approved: true }).eq('uid', uid);
+  };
 
   const filteredPlanets = useMemo(() => {
     return planets.filter(p => {
@@ -141,7 +204,7 @@ export default function App() {
     try {
       await supabase.from('drops').insert([{
         ...newDrop,
-        editor: user.user_metadata.full_name || user.email,
+        editor: profile?.nickname || user.email,
         updatedAt: new Date().toISOString()
       }]);
       setShowAddModal(false);
@@ -218,7 +281,23 @@ export default function App() {
         <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-mono opacity-50 uppercase">{user.email}</span>
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-mono opacity-50 uppercase">{profile?.nickname || user.email}</span>
+                {profile && !profile.approved && (
+                  <span className="text-[8px] text-yellow-500 font-bold uppercase animate-pulse">Pending Approval</span>
+                )}
+              </div>
+              {profile?.role === 'admin' && (
+                <button 
+                  onClick={() => setShowAdminModal(true)}
+                  className="bg-[#444] hover:bg-[#555] px-3 py-1.5 text-[10px] uppercase font-bold transition-colors rounded flex items-center gap-2"
+                >
+                  Admin
+                  {allProfiles.filter(p => !p.approved).length > 0 && (
+                    <span className="w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </button>
+              )}
               <button 
                 onClick={handleLogout}
                 className="bg-[#333] hover:bg-[#444] px-3 py-1.5 text-[10px] uppercase font-bold transition-colors rounded"
@@ -265,7 +344,7 @@ export default function App() {
             ))}
           </select>
 
-          {user && (
+          {profile?.approved && (
             <button 
               onClick={() => setShowAddModal(true)}
               className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-xs font-bold rounded hover:opacity-90"
@@ -367,6 +446,90 @@ export default function App() {
 
       {/* Modals */}
       <AnimatePresence>
+        {showAuthModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAuthModal(false)} />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-sm bg-[#1A1A1A] border border-[#333] p-8 rounded-lg shadow-2xl"
+            >
+              <h2 className="text-xl font-bold mb-6 uppercase tracking-tight text-center">
+                {authMode === 'login' ? 'Editor Access' : 'Create Account'}
+              </h2>
+              <form onSubmit={handleEmailAuth} className="space-y-4">
+                <div>
+                  <label className="text-[10px] uppercase opacity-50 block mb-1">Nickname</label>
+                  <input 
+                    type="text" required value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    className="w-full bg-[#2A2A2A] border border-[#333] p-3 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase opacity-50 block mb-1">Password</label>
+                  <input 
+                    type="password" required value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-[#2A2A2A] border border-[#333] p-3 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                  />
+                </div>
+                {authError && <p className="text-red-400 text-[10px] uppercase font-bold">{authError}</p>}
+                <button type="submit" className="w-full bg-[#90EE90] text-[#2A2A2A] py-3 text-xs font-bold rounded uppercase tracking-widest">
+                  {authMode === 'login' ? 'Login' : 'Sign Up'}
+                </button>
+              </form>
+              <div className="mt-6 text-center">
+                <button 
+                  onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+                  className="text-[10px] uppercase opacity-50 hover:opacity-100 transition-opacity"
+                >
+                  {authMode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Login"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showAdminModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdminModal(false)} />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-2xl bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-lg font-bold uppercase tracking-tight">User Management</h2>
+                <button onClick={() => setShowAdminModal(false)}><X size={18} /></button>
+              </div>
+              
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                {allProfiles.filter(p => p.role !== 'admin').map(p => (
+                  <div key={p.uid} className="bg-[#2A2A2A] p-4 rounded border border-[#333] flex items-center justify-center gap-4">
+                    <div className="flex-1">
+                      <div className="text-xs font-bold">{p.nickname}</div>
+                      <div className="text-[8px] opacity-30">{p.email}</div>
+                      <div className={`text-[9px] uppercase font-bold ${p.approved ? 'text-[#90EE90]' : 'text-yellow-500'}`}>
+                        {p.approved ? 'Approved' : 'Pending Approval'}
+                      </div>
+                    </div>
+                    {!p.approved && (
+                      <button 
+                        onClick={() => approveUser(p.uid)}
+                        className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[10px] uppercase font-bold rounded hover:opacity-90"
+                      >
+                        Approve
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {allProfiles.filter(p => p.role !== 'admin').length === 0 && (
+                  <p className="text-center text-xs opacity-50 py-8">No users found.</p>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+
         {showAddModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
