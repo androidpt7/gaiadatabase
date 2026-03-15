@@ -27,6 +27,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
+  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
   const [planets, setPlanets] = useState<Planet[]>([]);
   const [drops, setDrops] = useState<Drop[]>([]);
   const [loading, setLoading] = useState(true);
@@ -185,6 +186,28 @@ export default function App() {
     await supabase.from('profiles').update({ approved: true }).eq('uid', uid);
   };
 
+  const createAdminProfileManually = async () => {
+    if (!user) return;
+    setIsCreatingAdmin(true);
+    try {
+      const isAdmin = user.email === 'elton.duarteboss7@gmail.com';
+      const newProfile: UserProfile = {
+        uid: user.id,
+        email: user.email || '',
+        nickname: user.user_metadata?.nickname || 'Admin',
+        role: isAdmin ? 'admin' : 'user',
+        approved: isAdmin
+      };
+      const { error } = await supabase.from('profiles').upsert([newProfile]);
+      if (error) throw error;
+      setProfile(newProfile);
+    } catch (err) {
+      console.error("Error creating admin profile:", err);
+    } finally {
+      setIsCreatingAdmin(false);
+    }
+  };
+
   const filteredPlanets = useMemo(() => {
     return planets.filter(p => {
       const matchesRing = selectedRing === 'all' || p.ring === selectedRing;
@@ -281,6 +304,15 @@ export default function App() {
         <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
+              {!profile && user.email === 'elton.duarteboss7@gmail.com' && (
+                <button 
+                  onClick={createAdminProfileManually}
+                  disabled={isCreatingAdmin}
+                  className="bg-red-500 text-white px-3 py-1.5 text-[10px] uppercase font-bold animate-pulse rounded"
+                >
+                  {isCreatingAdmin ? 'Fixing...' : 'Fix Admin Profile'}
+                </button>
+              )}
               <div className="flex flex-col items-end">
                 <span className="text-[10px] font-mono opacity-50 uppercase">{profile?.nickname || user.email}</span>
                 {profile && !profile.approved && (
