@@ -655,8 +655,8 @@ export default function App() {
                             <div className="flex flex-col items-center justify-center gap-0.5 h-full">
                               {planetDrops.map(drop => (
                                 <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate w-full flex items-center gap-1">
-                                  {TECH_ICONS[drop.item] && (
-                                    <img src={TECH_ICONS[drop.item]} alt={drop.item} className="w-3 h-3 object-contain" referrerPolicy="no-referrer" />
+                                  {ITEM_ICONS[drop.item] && (
+                                    <img src={ITEM_ICONS[drop.item]} alt={drop.item} className="w-3 h-3 object-contain" referrerPolicy="no-referrer" />
                                   )}
                                   {drop.tech_name}
                                 </div>
