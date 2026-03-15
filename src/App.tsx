@@ -155,11 +155,13 @@ export default function App() {
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
-    const fakeEmail = `${nickname.toLowerCase().trim()}@gaia.db`;
+    // Internal identifier generation (hidden from user)
+    const sanitizedNickname = nickname.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
+    const internalId = `${sanitizedNickname}@gaia.db`;
     try {
       if (authMode === 'signup') {
         const { error } = await supabase.auth.signUp({ 
-          email: fakeEmail, 
+          email: internalId, 
           password,
           options: {
             data: { nickname }
@@ -167,17 +169,20 @@ export default function App() {
         });
         if (error) throw error;
         setAuthMode('login');
-        setAuthError('Account created! Please log in.');
+        setAuthError('NICKNAME REGISTERED! YOU CAN NOW LOGIN.');
       } else {
         const { error } = await supabase.auth.signInWithPassword({ 
-          email: fakeEmail, 
+          email: internalId, 
           password 
         });
         if (error) throw error;
         setShowAuthModal(false);
       }
     } catch (err: any) {
-      setAuthError(err.message);
+      // Translate technical email errors to Nickname terms
+      let msg = err.message.toUpperCase();
+      msg = msg.replace(/EMAIL/g, 'NICKNAME');
+      setAuthError(msg);
     }
   };
 
@@ -314,7 +319,7 @@ export default function App() {
                 </button>
               )}
               <div className="flex flex-col items-end">
-                <span className="text-[10px] font-mono opacity-50 uppercase">{profile?.uid || user.email}</span>
+                <span className="text-[10px] font-mono opacity-50 uppercase">{profile?.uid || 'GUEST'}</span>
                 {profile && !profile.approved && (
                   <span className="text-[8px] text-yellow-500 font-bold uppercase animate-pulse">Pending Approval</span>
                 )}
@@ -539,7 +544,6 @@ export default function App() {
                   <div key={p.auth_id} className="bg-[#2A2A2A] p-4 rounded border border-[#333] flex items-center justify-center gap-4">
                     <div className="flex-1">
                       <div className="text-xs font-bold">{p.uid}</div>
-                      <div className="text-[8px] opacity-30">{p.email}</div>
                       <div className={`text-[9px] uppercase font-bold ${p.approved ? 'text-[#90EE90]' : 'text-yellow-500'}`}>
                         {p.approved ? 'Approved' : 'Pending Approval'}
                       </div>
