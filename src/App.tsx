@@ -66,11 +66,11 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (uid: string) => {
+  const fetchProfile = async (auth_id: string) => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('uid', uid)
+      .eq('auth_id', auth_id)
       .single();
     
     if (error && error.code === 'PGRST116') {
@@ -81,9 +81,9 @@ export default function App() {
       const isAdmin = email === 'elton.duarteboss7@gmail.com' || storedNickname.toLowerCase() === 'admin';
       
       const newProfile: UserProfile = {
-        uid,
+        auth_id,
         email,
-        nickname: storedNickname,
+        uid: storedNickname,
         role: isAdmin ? 'admin' : 'user',
         approved: isAdmin
       };
@@ -181,9 +181,9 @@ export default function App() {
     }
   };
 
-  const approveUser = async (uid: string) => {
+  const approveUser = async (auth_id: string) => {
     if (profile?.role !== 'admin') return;
-    await supabase.from('profiles').update({ approved: true }).eq('uid', uid);
+    await supabase.from('profiles').update({ approved: true }).eq('auth_id', auth_id);
   };
 
   const createAdminProfileManually = async () => {
@@ -192,13 +192,13 @@ export default function App() {
     try {
       const isAdmin = user.email === 'elton.duarteboss7@gmail.com';
       const newProfile: UserProfile = {
-        uid: user.id,
+        auth_id: user.id,
         email: user.email || '',
-        nickname: user.user_metadata?.nickname || 'Admin',
+        uid: user.user_metadata?.nickname || 'Admin',
         role: isAdmin ? 'admin' : 'user',
         approved: isAdmin
       };
-      const { error } = await supabase.from('profiles').upsert([newProfile]);
+      const { error } = await supabase.from('profiles').upsert([newProfile], { onConflict: 'auth_id' });
       if (error) throw error;
       setProfile(newProfile);
     } catch (err) {
@@ -227,7 +227,7 @@ export default function App() {
     try {
       await supabase.from('drops').insert([{
         ...newDrop,
-        editor: profile?.nickname || user.email,
+        editor: profile?.uid || user.email,
         updatedAt: new Date().toISOString()
       }]);
       setShowAddModal(false);
@@ -304,17 +304,17 @@ export default function App() {
         <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
-              {!profile && user.email === 'elton.duarteboss7@gmail.com' && (
+              {user && !profile && (user.email === 'elton.duarteboss7@gmail.com' || user.email?.startsWith('admin@')) && (
                 <button 
                   onClick={createAdminProfileManually}
                   disabled={isCreatingAdmin}
-                  className="bg-red-500 text-white px-3 py-1.5 text-[10px] uppercase font-bold animate-pulse rounded"
+                  className="bg-red-600 text-white px-4 py-2 text-[11px] uppercase font-black animate-bounce rounded shadow-lg border-2 border-white z-50"
                 >
-                  {isCreatingAdmin ? 'Fixing...' : 'Fix Admin Profile'}
+                  {isCreatingAdmin ? 'Creating...' : '⚠️ CLICK HERE TO FIX ADMIN PROFILE'}
                 </button>
               )}
               <div className="flex flex-col items-end">
-                <span className="text-[10px] font-mono opacity-50 uppercase">{profile?.nickname || user.email}</span>
+                <span className="text-[10px] font-mono opacity-50 uppercase">{profile?.uid || user.email}</span>
                 {profile && !profile.approved && (
                   <span className="text-[8px] text-yellow-500 font-bold uppercase animate-pulse">Pending Approval</span>
                 )}
@@ -536,9 +536,9 @@ export default function App() {
               
               <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                 {allProfiles.filter(p => p.role !== 'admin').map(p => (
-                  <div key={p.uid} className="bg-[#2A2A2A] p-4 rounded border border-[#333] flex items-center justify-center gap-4">
+                  <div key={p.auth_id} className="bg-[#2A2A2A] p-4 rounded border border-[#333] flex items-center justify-center gap-4">
                     <div className="flex-1">
-                      <div className="text-xs font-bold">{p.nickname}</div>
+                      <div className="text-xs font-bold">{p.uid}</div>
                       <div className="text-[8px] opacity-30">{p.email}</div>
                       <div className={`text-[9px] uppercase font-bold ${p.approved ? 'text-[#90EE90]' : 'text-yellow-500'}`}>
                         {p.approved ? 'Approved' : 'Pending Approval'}
@@ -546,7 +546,7 @@ export default function App() {
                     </div>
                     {!p.approved && (
                       <button 
-                        onClick={() => approveUser(p.uid)}
+                        onClick={() => approveUser(p.auth_id)}
                         className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[10px] uppercase font-bold rounded hover:opacity-90"
                       >
                         Approve

@@ -24,9 +24,9 @@ export interface Drop {
 }
 
 export interface UserProfile {
-  uid: string;
+  auth_id: string;
+  uid: string; // This is the nickname
   email: string;
-  nickname: string;
   role: 'admin' | 'user';
   approved: boolean;
 }
