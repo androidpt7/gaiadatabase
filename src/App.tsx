@@ -532,7 +532,7 @@ export default function App() {
                 <th className="border border-[#444] p-1 w-16">Ring</th>
                 <th className="border border-[#444] p-1 w-40">Name</th>
                 {CATEGORIES.map(cat => (
-                  <th key={cat} className="border border-[#444] p-1 w-32">{cat}</th>
+                  <th key={cat} className={`border border-[#444] p-1 w-32 ${['WU', 'MU', 'SU', 'CU'].includes(cat) ? 'text-center' : ''}`}>{cat}</th>
                 ))}
                 <th className="border border-[#444] p-1 w-24">Enemy</th>
                 <th className="border border-[#444] p-1 w-24">Quarcs</th>
@@ -581,17 +581,17 @@ export default function App() {
                       const techValue = planetDrops.map(d => d.tech_name).join('\n');
                       
                       return (
-                        <td key={cat} className="border border-[#444] p-1 align-top">
+                        <td key={cat} className={`border border-[#444] p-1 align-top ${['WU', 'MU', 'SU', 'CU'].includes(cat) ? 'text-center' : ''}`}>
                           {isEditing ? (
                             <textarea 
                               value={techValue}
                               onChange={(e) => updateTechField(planet.id, cat, e.target.value)}
                               disabled={['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5}
                               rows={cat === 'Amarna' || cat === 'Soris' || cat === 'Giza' ? 3 : 1}
-                              className={`w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none focus:border-[#90EE90] resize-none text-[10px] leading-tight ${['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              className={`w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none focus:border-[#90EE90] resize-none text-[10px] leading-tight ${['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5 ? 'opacity-50 cursor-not-allowed' : ''} ${['WU', 'MU', 'SU', 'CU'].includes(cat) ? 'text-center' : ''}`}
                             />
                           ) : (
-                            <div className="flex flex-col gap-0.5">
+                            <div className={`flex flex-col gap-0.5 ${['WU', 'MU', 'SU', 'CU'].includes(cat) ? 'items-center' : ''}`}>
                               {planetDrops.map(drop => (
                                 <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate">
                                   {drop.tech_name}
