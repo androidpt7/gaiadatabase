@@ -26,7 +26,7 @@ const ENEMY_OPTIONS = ['-', 'Ancient', 'Mantis', 'Pirates', 'Methanoid', 'Imperi
 const QUARCS_OPTIONS = ['-', 'Ecoglyte', 'Oolyte', 'Dolomyte', 'Kenyte', 'Clay'];
 
 // Mapeamento de ícones
-const TECH_ICONS: Record<string, string> = {
+const ITEM_ICONS: Record<string, string> = {
   'Blasters': 'https://github.com/androidpt7/itempg/blob/main/icons/blaster.png?raw=true',
   'Collectors': 'https://github.com/androidpt7/itempg/blob/main/icons/collector.png?raw=true',
   'Repair Droids': 'https://github.com/androidpt7/itempg/blob/main/icons/repair_droid.png?raw=true',
