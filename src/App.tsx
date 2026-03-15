@@ -336,6 +336,22 @@ export default function App() {
   };
 
   const updateTechField = async (planet_id: string, category: TechCategory, value: string) => {
+    const planet = planets.find(p => p.id === planet_id);
+    const restrictedCategories = ['Amarna', 'Soris', 'Giza'];
+    
+    if (restrictedCategories.includes(category)) {
+      if (planet && planet.ring !== 5) {
+        alert(`${category} só pode ser adicionado em planetas R5.`);
+        return;
+      }
+      
+      const techNames = value.split('\n').filter(t => t.trim() !== '');
+      if (techNames.length > 3) {
+        alert(`${category} só pode ter no máximo 3 tecnologias.`);
+        return;
+      }
+    }
+
     const techNames = value.split('\n').filter(t => t.trim() !== '');
     await supabase.from('drops').delete().eq('planet_id', planet_id).eq('category', category);
     
@@ -570,8 +586,9 @@ export default function App() {
                             <textarea 
                               value={techValue}
                               onChange={(e) => updateTechField(planet.id, cat, e.target.value)}
+                              disabled={['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5}
                               rows={cat === 'Amarna' || cat === 'Soris' || cat === 'Giza' ? 3 : 1}
-                              className="w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none focus:border-[#90EE90] resize-none text-[10px] leading-tight"
+                              className={`w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none focus:border-[#90EE90] resize-none text-[10px] leading-tight ${['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5 ? 'opacity-50 cursor-not-allowed' : ''}`}
                             />
                           ) : (
                             <div className="flex flex-col gap-0.5">
