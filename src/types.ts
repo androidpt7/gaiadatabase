@@ -7,8 +7,12 @@ export interface Planet {
   lastCM?: string;
   baseCoords?: string;
   collapseTime?: string; // ISO String
+  collapseDays?: number;
+  collapseHours?: number;
   respawnTime?: string; // ISO String
   status?: 'Active' | 'Collapsed';
+  editor?: string;
+  requester?: string;
 }
 
 export type TechCategory = 'WU' | 'MU' | 'SU' | 'CU' | 'Amarna' | 'Soris' | 'Giza';

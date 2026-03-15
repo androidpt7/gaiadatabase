@@ -22,6 +22,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { User } from '@supabase/supabase-js';
 
 const CATEGORIES: TechCategory[] = ['WU', 'MU', 'SU', 'CU', 'Amarna', 'Soris', 'Giza'];
+const ENEMY_OPTIONS = ['-', 'Ancient', 'Mantis', 'Pirates', 'Methanoid', 'Imperials'];
+const QUARCS_OPTIONS = ['-', 'Ecoglyte', 'Oolyte', 'Dolomyte', 'Kenyte', 'Clay'];
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -34,6 +36,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRing, setSelectedRing] = useState<number | 'all'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddPlanetModal, setShowAddPlanetModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -41,6 +44,7 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [editingPlanet, setEditingPlanet] = useState<Planet | null>(null);
+  const [isSpreadsheetMode, setIsSpreadsheetMode] = useState(true);
   
   const [newDrop, setNewDrop] = useState({ 
     planetId: '', 
@@ -259,6 +263,29 @@ export default function App() {
     return drops.filter(d => d.planetId === planetId && d.category === category);
   };
 
+  const [newPlanet, setNewPlanet] = useState({
+    name: '',
+    ring: 5,
+    enemy: '-',
+    quarcs: '-',
+    status: 'Active' as const
+  });
+
+  const handleAddPlanet = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile || profile.role !== 'admin') return;
+
+    try {
+      const { error } = await supabase.from('planets').insert([newPlanet]);
+      if (error) throw error;
+      setShowAddPlanetModal(false);
+      setNewPlanet({ name: '', ring: 5, enemy: '-', quarcs: '-', status: 'Active' });
+      fetchPlanets();
+    } catch (err) {
+      console.error("Error adding planet:", err);
+    }
+  };
+
   const handleAddDrop = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !newDrop.planetId || !newDrop.techName) return;
@@ -293,9 +320,43 @@ export default function App() {
       const { id, ...data } = editingPlanet;
       await supabase.from('planets').update(data).eq('id', id);
       setEditingPlanet(null);
+      fetchPlanets();
     } catch (err) {
       console.error("Error updating planet:", err);
     }
+  };
+
+  const updatePlanetField = async (planetId: string, field: string, value: any) => {
+    const { error } = await supabase
+      .from('planets')
+      .update({ [field]: value })
+      .eq('id', planetId);
+    if (error) console.error(error);
+    else fetchPlanets();
+  };
+
+  const updateTechField = async (planetId: string, category: TechCategory, value: string) => {
+    const techNames = value.split('\n').filter(t => t.trim() !== '');
+    await supabase.from('drops').delete().eq('planetId', planetId).eq('category', category);
+    
+    if (techNames.length > 0) {
+      const newDrops = techNames.map(name => ({
+        planetId,
+        category,
+        techName: name.trim(),
+        editor: profile?.uid || user?.email,
+        updated_at: new Date().toISOString()
+      }));
+      await supabase.from('drops').insert(newDrops);
+    }
+    fetchDrops();
+  };
+
+  const handleDeletePlanet = async (id: string) => {
+    if (!profile || profile.role !== 'admin') return;
+    if (!window.confirm('DELETE THIS PLANET AND ALL ITS DATA?')) return;
+    await supabase.from('planets').delete().eq('id', id);
+    fetchPlanets();
   };
 
   const seedInitialData = async () => {
@@ -416,13 +477,28 @@ export default function App() {
           </select>
 
           {profile?.approved && (
-            <button 
-              onClick={() => setShowAddModal(true)}
-              className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-xs font-bold rounded hover:opacity-90"
-            >
-              <Plus size={14} />
-              Add Drop
-            </button>
+            <div className="flex items-center gap-2 ml-auto">
+              <button 
+                onClick={() => setIsSpreadsheetMode(!isSpreadsheetMode)}
+                className={`px-4 py-2 text-xs font-bold rounded transition-colors ${isSpreadsheetMode ? 'bg-[#90EE90] text-[#2A2A2A]' : 'bg-[#333] text-white'}`}
+              >
+                {isSpreadsheetMode ? 'View Mode' : 'Edit Mode'}
+              </button>
+              <button 
+                onClick={() => setShowAddPlanetModal(true)}
+                className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-xs font-bold rounded hover:opacity-90"
+              >
+                <Plus size={14} />
+                Add Planet
+              </button>
+              <button 
+                onClick={() => setShowAddModal(true)}
+                className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-xs font-bold rounded hover:opacity-90"
+              >
+                <Plus size={14} />
+                Add Drop
+              </button>
+            </div>
           )}
 
           {profile?.role === 'admin' && planets.length === 0 && (
@@ -431,88 +507,217 @@ export default function App() {
         </div>
 
         {/* Database Table */}
-        <table className="w-full border-collapse text-[11px] min-w-[1200px]">
-          <thead>
-            <tr className="bg-[#5CB85C] text-[#1A1A1A] font-bold uppercase">
-              <th className="border border-[#333] p-1.5 w-12 text-center">Ring</th>
-              <th className="border border-[#333] p-1.5 w-32 text-center">Name</th>
-              {CATEGORIES.map(cat => (
-                <th key={cat} className="border border-[#333] p-1.5 w-24 text-center">{cat}</th>
-              ))}
-              <th className="border border-[#333] p-1.5 w-24 text-center">Enemy</th>
-              <th className="border border-[#333] p-1.5 w-24 text-center">Quarcs</th>
-              <th className="border border-[#333] p-1.5 w-24 text-center">Last CM</th>
-              <th className="border border-[#333] p-1.5 w-24 text-center">Base Coords</th>
-              <th className="border border-[#333] p-1.5 w-32 text-center">Collapse</th>
-              <th className="border border-[#333] p-1.5 w-32 text-center">Respawn</th>
-              <th className="border border-[#333] p-1.5 w-24 text-center">Editor</th>
-              <th className="border border-[#333] p-1.5 w-24 text-center">Requester</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredPlanets.map((planet, idx) => {
-              return (
-                <React.Fragment key={planet.id}>
-                  <tr className={`hover:bg-[#333] transition-colors ${planet.status === 'Collapsed' ? 'text-red-400' : ''}`}>
-                    <td className="border border-[#333] p-2 text-center font-mono">{planet.ring}</td>
-                    <td className="border border-[#333] p-2 text-center relative group">
-                      <div className="font-bold">{planet.name}</div>
-                      {planet.status === 'Collapsed' && <div className="text-[9px] opacity-70">(Collapsed)</div>}
-                      {profile?.role === 'admin' && (
-                        <button 
-                          onClick={() => setEditingPlanet(planet)}
-                          className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 p-1 hover:text-[#90EE90]"
-                        >
-                          <Edit2 size={10} />
-                        </button>
+        <div className="bg-[#2A2A2A] rounded overflow-hidden border border-[#333]">
+          <table className="w-full border-collapse text-[11px] min-w-[1400px]">
+            <thead>
+              <tr className="bg-[#5CB85C] text-[#1A1A1A] font-bold uppercase">
+                <th className="border border-[#444] p-1 w-16">Ring</th>
+                <th className="border border-[#444] p-1 w-40">Name</th>
+                {CATEGORIES.map(cat => (
+                  <th key={cat} className="border border-[#444] p-1 w-32">{cat}</th>
+                ))}
+                <th className="border border-[#444] p-1 w-24">Enemy</th>
+                <th className="border border-[#444] p-1 w-24">Quarcs</th>
+                <th className="border border-[#444] p-1 w-24">Last CM</th>
+                <th className="border border-[#444] p-1 w-32">Base Coords</th>
+                <th className="border border-[#444] p-1 w-24">Collapse</th>
+                <th className="border border-[#444] p-1 w-24">Respawn</th>
+                <th className="border border-[#444] p-1 w-24">Editor</th>
+                <th className="border border-[#444] p-1 w-24">Request</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPlanets.map((planet) => {
+                const isEditing = isSpreadsheetMode && profile?.approved;
+                
+                return (
+                  <tr key={planet.id} className="hover:bg-[#333] transition-colors group">
+                    <td className="border border-[#444] p-1 text-center font-mono">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-xs">{planet.ring}</span>
+                        {isEditing && profile?.role === 'admin' && (
+                          <button 
+                            onClick={() => handleDeletePlanet(planet.id)}
+                            className="bg-[#1A1A1A] border border-[#444] px-2 py-0.5 rounded text-[9px] hover:bg-red-900 hover:text-white transition-colors"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="border border-[#444] p-1">
+                      {isEditing ? (
+                        <input 
+                          type="text" 
+                          value={planet.name}
+                          onChange={(e) => updatePlanetField(planet.id, 'name', e.target.value)}
+                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none focus:border-[#90EE90] text-[10px]"
+                        />
+                      ) : (
+                        <div className="font-bold px-1 text-[10px]">{planet.name}</div>
                       )}
                     </td>
                     
                     {CATEGORIES.map(cat => {
                       const planetDrops = getDropsForPlanet(planet.id, cat);
+                      const techValue = planetDrops.map(d => d.techName).join('\n');
+                      
                       return (
-                        <td key={cat} className="border border-[#333] p-1 text-center align-top min-h-[40px]">
-                          <div className="flex flex-col gap-1">
-                            {planetDrops.map(drop => (
-                              <div key={drop.id} className="group/drop relative bg-[#444] p-1 rounded text-[9px] flex items-center justify-between">
-                                <span className="truncate">{drop.techName}</span>
-                                {profile?.role === 'admin' && (
-                                  <button 
-                                    onClick={() => handleDeleteDrop(drop.id)}
-                                    className="opacity-0 group-hover/drop:opacity-100 text-red-400 hover:text-red-300 ml-1"
-                                  >
-                                    <Trash2 size={8} />
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
+                        <td key={cat} className="border border-[#444] p-1 align-top">
+                          {isEditing ? (
+                            <textarea 
+                              value={techValue}
+                              onChange={(e) => updateTechField(planet.id, cat, e.target.value)}
+                              rows={cat === 'Amarna' || cat === 'Soris' || cat === 'Giza' ? 3 : 1}
+                              className="w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none focus:border-[#90EE90] resize-none text-[10px] leading-tight"
+                            />
+                          ) : (
+                            <div className="flex flex-col gap-0.5">
+                              {planetDrops.map(drop => (
+                                <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate">
+                                  {drop.techName}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </td>
                       );
                     })}
 
-                    <td className="border border-[#333] p-2 text-center">{planet.enemy}</td>
-                    <td className="border border-[#333] p-2 text-center">{planet.quarcs}</td>
-                    <td className="border border-[#333] p-2 text-center">{planet.lastCM}</td>
-                    <td className="border border-[#333] p-2 text-center">{planet.baseCoords}</td>
-                    <td className="border border-[#333] p-2 text-center font-mono text-[10px]">
-                      {planet.collapseTime ? new Date(planet.collapseTime).toLocaleString() : '-'}
+                    <td className="border border-[#444] p-1">
+                      {isEditing ? (
+                        <select 
+                          value={planet.enemy || '-'}
+                          onChange={(e) => updatePlanetField(planet.id, 'enemy', e.target.value)}
+                          className="w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none text-[10px]"
+                        >
+                          {ENEMY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                      ) : (
+                        <div className="text-center">{planet.enemy || '-'}</div>
+                      )}
                     </td>
-                    <td className="border border-[#333] p-2 text-center font-mono text-[10px]">
-                      {planet.respawnTime ? new Date(planet.respawnTime).toLocaleString() : '-'}
+
+                    <td className="border border-[#444] p-1">
+                      {isEditing ? (
+                        <select 
+                          value={planet.quarcs || '-'}
+                          onChange={(e) => updatePlanetField(planet.id, 'quarcs', e.target.value)}
+                          className="w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none text-[10px]"
+                        >
+                          {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                      ) : (
+                        <div className="text-center">{planet.quarcs || '-'}</div>
+                      )}
                     </td>
-                    <td className="border border-[#333] p-2 text-center opacity-70">
-                      {drops.find(d => d.planetId === planet.id)?.editor || '-'}
+
+                    <td className="border border-[#444] p-1">
+                      {isEditing ? (
+                        <input 
+                          type="text" 
+                          value={planet.lastCM || ''}
+                          onChange={(e) => updatePlanetField(planet.id, 'lastCM', e.target.value)}
+                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
+                        />
+                      ) : (
+                        <div className="text-center text-[10px]">{planet.lastCM || '-'}</div>
+                      )}
                     </td>
-                    <td className="border border-[#333] p-2 text-center opacity-70">
-                      {drops.find(d => d.planetId === planet.id)?.requester || '-'}
+
+                    <td className="border border-[#444] p-1">
+                      {isEditing ? (
+                        <input 
+                          type="text" 
+                          value={planet.baseCoords || ''}
+                          onChange={(e) => updatePlanetField(planet.id, 'baseCoords', e.target.value)}
+                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
+                        />
+                      ) : (
+                        <div className="text-center text-[10px]">{planet.baseCoords || '-'}</div>
+                      )}
+                    </td>
+
+                    <td className="border border-[#444] p-1">
+                      {isEditing ? (
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[7px] opacity-50 uppercase w-6">Days</span>
+                            <input 
+                              type="number" 
+                              value={planet.collapseDays || 0}
+                              onChange={(e) => updatePlanetField(planet.id, 'collapseDays', parseInt(e.target.value) || 0)}
+                              className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded text-[9px] focus:outline-none h-4"
+                              placeholder="0"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[7px] opacity-50 uppercase w-6">Hours</span>
+                            <input 
+                              type="number" 
+                              value={planet.collapseHours || 0}
+                              onChange={(e) => updatePlanetField(planet.id, 'collapseHours', parseInt(e.target.value) || 0)}
+                              className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded text-[9px] focus:outline-none h-4"
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          {planet.collapseDays || planet.collapseHours ? (
+                            <div className="flex flex-col text-[9px]">
+                              {planet.collapseDays ? <span>{planet.collapseDays}d</span> : null}
+                              {planet.collapseHours ? <span>{planet.collapseHours}h</span> : null}
+                            </div>
+                          ) : '-'}
+                        </div>
+                      )}
+                    </td>
+
+                    <td className="border border-[#444] p-1">
+                      {isEditing ? (
+                        <input 
+                          type="text" 
+                          value={planet.respawnTime || ''}
+                          onChange={(e) => updatePlanetField(planet.id, 'respawnTime', e.target.value)}
+                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
+                        />
+                      ) : (
+                        <div className="text-center text-[10px]">{planet.respawnTime || '-'}</div>
+                      )}
+                    </td>
+
+                    <td className="border border-[#444] p-1">
+                      {isEditing ? (
+                        <input 
+                          type="text" 
+                          value={planet.editor || ''}
+                          onChange={(e) => updatePlanetField(planet.id, 'editor', e.target.value)}
+                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
+                        />
+                      ) : (
+                        <div className="text-center text-[10px]">{planet.editor || '-'}</div>
+                      )}
+                    </td>
+
+                    <td className="border border-[#444] p-1">
+                      {isEditing ? (
+                        <input 
+                          type="text" 
+                          value={planet.requester || ''}
+                          onChange={(e) => updatePlanetField(planet.id, 'requester', e.target.value)}
+                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
+                        />
+                      ) : (
+                        <div className="text-center text-[10px]">{planet.requester || '-'}</div>
+                      )}
                     </td>
                   </tr>
-                </React.Fragment>
-              );
-            })}
-          </tbody>
-        </table>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </main>
 
       {/* Modals */}
@@ -596,6 +801,75 @@ export default function App() {
                   <p className="text-center text-xs opacity-50 py-8">No users found.</p>
                 )}
               </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showAddPlanetModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddPlanetModal(false)} />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-md bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
+            >
+              <h2 className="text-lg font-bold mb-4 uppercase tracking-tight">Add New Planet</h2>
+              <form onSubmit={handleAddPlanet} className="space-y-4">
+                <div>
+                  <label className="text-[10px] uppercase opacity-50 block mb-1">Planet Name</label>
+                  <input 
+                    type="text" required value={newPlanet.name}
+                    onChange={(e) => setNewPlanet(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Ring</label>
+                    <select 
+                      value={newPlanet.ring}
+                      onChange={(e) => setNewPlanet(prev => ({ ...prev, ring: Number(e.target.value) }))}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                    >
+                      {[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>Ring {r}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Enemy</label>
+                    <select 
+                      value={newPlanet.enemy}
+                      onChange={(e) => setNewPlanet(prev => ({ ...prev, enemy: e.target.value }))}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                    >
+                      {ENEMY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase opacity-50 block mb-1">Quarcs</label>
+                  <select 
+                    value={newPlanet.quarcs}
+                    onChange={(e) => setNewPlanet(prev => ({ ...prev, quarcs: e.target.value }))}
+                    className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                  >
+                    {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowAddPlanetModal(false)}
+                    className="flex-1 bg-[#333] text-white py-2 text-xs font-bold rounded uppercase"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded uppercase"
+                  >
+                    Add Planet
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}
