@@ -404,7 +404,7 @@ export default function App() {
         <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
-              {user && !profile && (user.email === 'elton.duarteboss7@gmail.com' || user.email?.startsWith('admin@')) && (
+              {user && (user.email === 'elton.duarteboss7@gmail.com' || user.email?.startsWith('admin@')) && profile?.role !== 'admin' && (
                 <button 
                   onClick={createAdminProfileManually}
                   disabled={isCreatingAdmin}
@@ -484,13 +484,15 @@ export default function App() {
               >
                 {isSpreadsheetMode ? 'View Mode' : 'Edit Mode'}
               </button>
-              <button 
-                onClick={() => setShowAddPlanetModal(true)}
-                className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-xs font-bold rounded hover:opacity-90"
-              >
-                <Plus size={14} />
-                Add Planet
-              </button>
+              {profile?.role === 'admin' && (
+                <button 
+                  onClick={() => setShowAddPlanetModal(true)}
+                  className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-xs font-bold rounded hover:opacity-90"
+                >
+                  <Plus size={14} />
+                  Add Planet
+                </button>
+              )}
               <button 
                 onClick={() => setShowAddModal(true)}
                 className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-xs font-bold rounded hover:opacity-90"
@@ -721,268 +723,292 @@ export default function App() {
       </main>
 
       {/* Modals */}
-      <AnimatePresence>
-        {showAuthModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAuthModal(false)} />
+        <AnimatePresence>
+          {showAddPlanetModal && (
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-sm bg-[#1A1A1A] border border-[#333] p-8 rounded-lg shadow-2xl"
+              key="add-planet-modal"
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
-              <h2 className="text-xl font-bold mb-6 uppercase tracking-tight text-center">
-                {authMode === 'login' ? 'Editor Access' : 'Create Account'}
-              </h2>
-              <form onSubmit={handleEmailAuth} className="space-y-4">
-                <div>
-                  <label className="text-[10px] uppercase opacity-50 block mb-1">Nickname</label>
-                  <input 
-                    type="text" required value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    className="w-full bg-[#2A2A2A] border border-[#333] p-3 text-xs rounded focus:outline-none focus:border-[#90EE90]"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase opacity-50 block mb-1">Password</label>
-                  <input 
-                    type="password" required value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#2A2A2A] border border-[#333] p-3 text-xs rounded focus:outline-none focus:border-[#90EE90]"
-                  />
-                </div>
-                {authError && <p className="text-red-400 text-[10px] uppercase font-bold">{authError}</p>}
-                <button type="submit" className="w-full bg-[#90EE90] text-[#2A2A2A] py-3 text-xs font-bold rounded uppercase tracking-widest">
-                  {authMode === 'login' ? 'Login' : 'Sign Up'}
-                </button>
-              </form>
-              <div className="mt-6 text-center">
-                <button 
-                  onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-                  className="text-[10px] uppercase opacity-50 hover:opacity-100 transition-opacity"
-                >
-                  {authMode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Login"}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {showAdminModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdminModal(false)} />
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-2xl bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-bold uppercase tracking-tight">User Management</h2>
-                <button onClick={() => setShowAdminModal(false)}><X size={18} /></button>
-              </div>
-              
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                {allProfiles.filter(p => p.role !== 'admin').map(p => (
-                  <div key={p.auth_id} className="bg-[#2A2A2A] p-4 rounded border border-[#333] flex items-center justify-center gap-4">
-                    <div className="flex-1">
-                      <div className="text-xs font-bold">{p.uid}</div>
-                      <div className={`text-[9px] uppercase font-bold ${p.approved ? 'text-[#90EE90]' : 'text-yellow-500'}`}>
-                        {p.approved ? 'Approved' : 'Pending Approval'}
-                      </div>
-                    </div>
-                    {!p.approved && (
-                      <button 
-                        onClick={() => approveUser(p.auth_id)}
-                        className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[10px] uppercase font-bold rounded hover:opacity-90"
-                      >
-                        Approve
-                      </button>
-                    )}
-                  </div>
-                ))}
-                {allProfiles.filter(p => p.role !== 'admin').length === 0 && (
-                  <p className="text-center text-xs opacity-50 py-8">No users found.</p>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {showAddPlanetModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddPlanetModal(false)} />
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
-            >
-              <h2 className="text-lg font-bold mb-4 uppercase tracking-tight">Add New Planet</h2>
-              <form onSubmit={handleAddPlanet} className="space-y-4">
-                <div>
-                  <label className="text-[10px] uppercase opacity-50 block mb-1">Planet Name</label>
-                  <input 
-                    type="text" required value={newPlanet.name}
-                    onChange={(e) => setNewPlanet(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddPlanetModal(false)} />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} 
+                animate={{ scale: 1, opacity: 1 }} 
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="relative w-full max-w-md bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
+              >
+                <h2 className="text-lg font-bold mb-4 uppercase tracking-tight">Add New Planet</h2>
+                <form onSubmit={handleAddPlanet} className="space-y-4">
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Ring</label>
-                    <select 
-                      value={newPlanet.ring}
-                      onChange={(e) => setNewPlanet(prev => ({ ...prev, ring: Number(e.target.value) }))}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                    >
-                      {[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>Ring {r}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Enemy</label>
-                    <select 
-                      value={newPlanet.enemy}
-                      onChange={(e) => setNewPlanet(prev => ({ ...prev, enemy: e.target.value }))}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                    >
-                      {ENEMY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase opacity-50 block mb-1">Quarcs</label>
-                  <select 
-                    value={newPlanet.quarcs}
-                    onChange={(e) => setNewPlanet(prev => ({ ...prev, quarcs: e.target.value }))}
-                    className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                  >
-                    {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
-                <div className="flex gap-3 pt-2">
-                  <button 
-                    type="button" 
-                    onClick={() => setShowAddPlanetModal(false)}
-                    className="flex-1 bg-[#333] text-white py-2 text-xs font-bold rounded uppercase"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded uppercase"
-                  >
-                    Add Planet
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
-            >
-              <h2 className="text-lg font-bold mb-4 uppercase tracking-tight">Report Drop</h2>
-              <form onSubmit={handleAddDrop} className="space-y-4">
-                <div>
-                  <label className="text-[10px] uppercase opacity-50 block mb-1">Planet</label>
-                  <select 
-                    required value={newDrop.planetId}
-                    onChange={(e) => setNewDrop(prev => ({ ...prev, planetId: e.target.value }))}
-                    className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                  >
-                    <option value="">Select Planet...</option>
-                    {planets.map(p => <option key={p.id} value={p.id}>{p.name} (R{p.ring})</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase opacity-50 block mb-1">Category</label>
-                  <select 
-                    value={newDrop.category}
-                    onChange={(e) => setNewDrop(prev => ({ ...prev, category: e.target.value as TechCategory }))}
-                    className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                  >
-                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase opacity-50 block mb-1">Tech Name</label>
-                  <input 
-                    type="text" required value={newDrop.techName}
-                    onChange={(e) => setNewDrop(prev => ({ ...prev, techName: e.target.value }))}
-                    className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase opacity-50 block mb-1">Requester (Optional)</label>
-                  <input 
-                    type="text" value={newDrop.requester}
-                    onChange={(e) => setNewDrop(prev => ({ ...prev, requester: e.target.value }))}
-                    className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                  />
-                </div>
-                <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-[#333] py-2 text-xs font-bold rounded">Cancel</button>
-                  <button type="submit" className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded">Add Drop</button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-
-        {editingPlanet && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setEditingPlanet(null)} />
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold uppercase tracking-tight">Edit {editingPlanet.name}</h2>
-                <button onClick={() => setEditingPlanet(null)}><X size={18} /></button>
-              </div>
-              <form onSubmit={handleUpdatePlanet} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Enemy</label>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Planet Name</label>
                     <input 
-                      type="text" value={editingPlanet.enemy || ''}
-                      onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, enemy: e.target.value }) : null)}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      type="text" required value={newPlanet.name}
+                      onChange={(e) => setNewPlanet(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
                     />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Ring</label>
+                      <select 
+                        value={newPlanet.ring}
+                        onChange={(e) => setNewPlanet(prev => ({ ...prev, ring: Number(e.target.value) }))}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      >
+                        {[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>Ring {r}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Enemy</label>
+                      <select 
+                        value={newPlanet.enemy}
+                        onChange={(e) => setNewPlanet(prev => ({ ...prev, enemy: e.target.value }))}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      >
+                        {ENEMY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
                   </div>
                   <div>
                     <label className="text-[10px] uppercase opacity-50 block mb-1">Quarcs</label>
+                    <select 
+                      value={newPlanet.quarcs}
+                      onChange={(e) => setNewPlanet(prev => ({ ...prev, quarcs: e.target.value }))}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                    >
+                      {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowAddPlanetModal(false)}
+                      className="flex-1 bg-[#333] text-white py-2 text-xs font-bold rounded uppercase"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded uppercase"
+                    >
+                      Add Planet
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {showAuthModal && (
+            <motion.div 
+              key="auth-modal"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAuthModal(false)} />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                className="relative w-full max-w-sm bg-[#1A1A1A] border border-[#333] p-8 rounded-lg shadow-2xl"
+              >
+                <h2 className="text-xl font-bold mb-6 uppercase tracking-tight text-center">
+                  {authMode === 'login' ? 'Editor Access' : 'Create Account'}
+                </h2>
+                <form onSubmit={handleEmailAuth} className="space-y-4">
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Nickname</label>
                     <input 
-                      type="text" value={editingPlanet.quarcs || ''}
-                      onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, quarcs: e.target.value }) : null)}
+                      type="text" required value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-3 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Password</label>
+                    <input 
+                      type="password" required value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-3 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                    />
+                  </div>
+                  {authError && <p className="text-red-400 text-[10px] uppercase font-bold">{authError}</p>}
+                  <button type="submit" className="w-full bg-[#90EE90] text-[#2A2A2A] py-3 text-xs font-bold rounded uppercase tracking-widest">
+                    {authMode === 'login' ? 'Login' : 'Sign Up'}
+                  </button>
+                </form>
+                <div className="mt-6 text-center">
+                  <button 
+                    onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+                    className="text-[10px] uppercase opacity-50 hover:opacity-100 transition-opacity"
+                  >
+                    {authMode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Login"}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {showAdminModal && (
+            <motion.div 
+              key="admin-modal"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdminModal(false)} />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                className="relative w-full max-w-2xl bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-bold uppercase tracking-tight">User Management</h2>
+                  <button onClick={() => setShowAdminModal(false)}><X size={18} /></button>
+                </div>
+                
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                  {allProfiles.filter(p => p.role !== 'admin').map(p => (
+                    <div key={p.auth_id} className="bg-[#2A2A2A] p-4 rounded border border-[#333] flex items-center justify-center gap-4">
+                      <div className="flex-1">
+                        <div className="text-xs font-bold">{p.uid}</div>
+                        <div className={`text-[9px] uppercase font-bold ${p.approved ? 'text-[#90EE90]' : 'text-yellow-500'}`}>
+                          {p.approved ? 'Approved' : 'Pending Approval'}
+                        </div>
+                      </div>
+                      {!p.approved && (
+                        <button 
+                          onClick={() => approveUser(p.auth_id)}
+                          className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[10px] uppercase font-bold rounded hover:opacity-90"
+                        >
+                          Approve
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {allProfiles.filter(p => p.role !== 'admin').length === 0 && (
+                    <p className="text-center text-xs opacity-50 py-8">No users found.</p>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {showAddModal && (
+            <motion.div 
+              key="add-drop-modal"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                className="relative w-full max-w-md bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
+              >
+                <h2 className="text-lg font-bold mb-4 uppercase tracking-tight">Report Drop</h2>
+                <form onSubmit={handleAddDrop} className="space-y-4">
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Planet</label>
+                    <select 
+                      required value={newDrop.planetId}
+                      onChange={(e) => setNewDrop(prev => ({ ...prev, planetId: e.target.value }))}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                    >
+                      <option value="">Select Planet...</option>
+                      {planets.map(p => <option key={p.id} value={p.id}>{p.name} (R{p.ring})</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Category</label>
+                    <select 
+                      value={newDrop.category}
+                      onChange={(e) => setNewDrop(prev => ({ ...prev, category: e.target.value as TechCategory }))}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                    >
+                      {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Tech Name</label>
+                    <input 
+                      type="text" required value={newDrop.techName}
+                      onChange={(e) => setNewDrop(prev => ({ ...prev, techName: e.target.value }))}
                       className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
                     />
                   </div>
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase opacity-50 block mb-1">Status</label>
-                  <select 
-                    value={editingPlanet.status}
-                    onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, status: e.target.value as any }) : null)}
-                    className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Collapsed">Collapsed</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase opacity-50 block mb-1">Base Coords</label>
-                  <input 
-                    type="text" value={editingPlanet.baseCoords || ''}
-                    onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, baseCoords: e.target.value }) : null)}
-                    className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                  />
-                </div>
-                <button type="submit" className="w-full bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded mt-4">Save Changes</button>
-              </form>
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Requester (Optional)</label>
+                    <input 
+                      type="text" value={newDrop.requester}
+                      onChange={(e) => setNewDrop(prev => ({ ...prev, requester: e.target.value }))}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-[#333] py-2 text-xs font-bold rounded">Cancel</button>
+                    <button type="submit" className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded">Add Drop</button>
+                  </div>
+                </form>
+              </motion.div>
             </motion.div>
-          </div>
-        )}
+          )}
+
+          {editingPlanet && (
+            <motion.div 
+              key="edit-planet-modal"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setEditingPlanet(null)} />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                className="relative w-full max-w-md bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-bold uppercase tracking-tight">Edit {editingPlanet.name}</h2>
+                  <button onClick={() => setEditingPlanet(null)}><X size={18} /></button>
+                </div>
+                <form onSubmit={handleUpdatePlanet} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Enemy</label>
+                      <input 
+                        type="text" value={editingPlanet.enemy || ''}
+                        onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, enemy: e.target.value }) : null)}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Quarcs</label>
+                      <input 
+                        type="text" value={editingPlanet.quarcs || ''}
+                        onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, quarcs: e.target.value }) : null)}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Status</label>
+                    <select 
+                      value={editingPlanet.status}
+                      onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, status: e.target.value as any }) : null)}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Collapsed">Collapsed</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Base Coords</label>
+                    <input 
+                      type="text" value={editingPlanet.baseCoords || ''}
+                      onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, baseCoords: e.target.value }) : null)}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                    />
+                  </div>
+                  <button type="submit" className="w-full bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded mt-4">Save Changes</button>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
       </AnimatePresence>
     </div>
   );
