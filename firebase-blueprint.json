@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "Planet": {
+      "title": "Planet",
+      "description": "A planet in the Sirius system with its metadata.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "ring": { "type": "integer" },
+        "enemy": { "type": "string" },
+        "quarcs": { "type": "string" },
+        "lastCM": { "type": "string" },
+        "baseCoords": { "type": "string" },
+        "collapseTime": { "type": "string", "format": "date-time" },
+        "respawnTime": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Active", "Collapsed"] }
+      },
+      "required": ["name", "ring"]
+    },
+    "Drop": {
+      "title": "Drop Record",
+      "description": "A record of an ancient tech drop in a specific category.",
+      "type": "object",
+      "properties": {
+        "planetId": { "type": "string" },
+        "category": { "type": "string", "enum": ["WU", "MU", "SU", "CU", "Amarna", "Soris", "Giza"] },
+        "techName": { "type": "string" },
+        "editor": { "type": "string" },
+        "requester": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["planetId", "category", "techName"]
+    }
+  },
+  "firestore": {
+    "planets": {
+      "schema": "Planet",
+      "description": "List of planets and their current status."
+    },
+    "drops": {
+      "schema": "Drop",
+      "description": "Active tech drops categorized by slot."
+    }
+  }
+}

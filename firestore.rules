@@ -1,0 +1,77 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: planets
+// Fields:
+//   - name: string (required)
+//   - ring: number (required, 1-5)
+//
+// Collection: technologies
+// Fields:
+//   - name: string (required)
+//   - type: string (required)
+//   - level: number (optional)
+//
+// Collection: drops
+// Fields:
+//   - planetId: string (required)
+//   - techId: string (required)
+//   - updatedAt: timestamp (required)
+//   - reportedBy: string (required, uid)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "elton.duarteboss7@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidPlanet(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.ring is number && data.ring >= 1 && data.ring <= 5;
+    }
+
+    function isValidTech(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.type is string && data.type.size() > 0;
+    }
+
+    function isValidDrop(data) {
+      return data.planetId is string &&
+             data.techId is string &&
+             data.updatedAt is timestamp &&
+             data.reportedBy == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || request.auth.uid == userId;
+    }
+
+    match /planets/{planetId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /technologies/{techId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /drops/{dropId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated() && isValidDrop(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}
