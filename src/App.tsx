@@ -88,6 +88,27 @@ export default function App() {
     type: ''
   });
 
+  const getAbbreviation = (system: string, type: string) => {
+    const sysMap: Record<string, string> = {
+      'Vega': 'V', 'Antares': 'A', 'Gemini': 'G', 'Mizar': 'M', 'Sol': 'S', 'Draconis': 'D', 'Sirius': 'Si'
+    };
+    const typeMap: Record<string, string> = {
+      'Rapid': 'R', 'Long': 'L', 'Normal': 'N', 'Strong': 'St'
+    };
+    return `${sysMap[system] || ''} ${typeMap[type] || ''}`.trim();
+  };
+
+  const updateTechName = (system: string, type: string, item: string) => {
+    const abbr = getAbbreviation(system, type);
+    setNewDrop(prev => ({ 
+      ...prev, 
+      system, 
+      type, 
+      item,
+      tech_name: `${abbr} ${item}`.trim() 
+    }));
+  };
+
   // Auth Listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -990,7 +1011,7 @@ export default function App() {
                     <label className="text-[10px] uppercase opacity-50 block mb-1">System</label>
                     <select 
                       required value={newDrop.system}
-                      onChange={(e) => setNewDrop(prev => ({ ...prev, system: e.target.value }))}
+                      onChange={(e) => updateTechName(e.target.value, newDrop.type, newDrop.item)}
                       className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
                     >
                       <option value="">Select System...</option>
@@ -1001,7 +1022,7 @@ export default function App() {
                     <label className="text-[10px] uppercase opacity-50 block mb-1">Type</label>
                     <select 
                       required value={newDrop.type}
-                      onChange={(e) => setNewDrop(prev => ({ ...prev, type: e.target.value }))}
+                      onChange={(e) => updateTechName(newDrop.system, e.target.value, newDrop.item)}
                       className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
                     >
                       <option value="">Select Type...</option>
@@ -1011,9 +1032,16 @@ export default function App() {
                   <div>
                     <label className="text-[10px] uppercase opacity-50 block mb-1">Item</label>
                     <input 
-                      type="text" required value={newDrop.tech_name}
-                      onChange={(e) => setNewDrop(prev => ({ ...prev, tech_name: e.target.value }))}
+                      type="text" required value={newDrop.item}
+                      onChange={(e) => updateTechName(newDrop.system, newDrop.type, e.target.value)}
                       className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Tech Name (Auto)</label>
+                    <input 
+                      type="text" readOnly value={newDrop.tech_name}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none opacity-50"
                     />
                   </div>
                   <div>
