@@ -4,27 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  collection, 
-  onSnapshot, 
-  query, 
-  orderBy, 
-  addDoc, 
-  serverTimestamp, 
-  doc, 
-  setDoc, 
-  getDoc,
-  deleteDoc,
-  updateDoc
-} from 'firebase/firestore';
-import { 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  onAuthStateChanged, 
-  signOut,
-  User
-} from 'firebase/auth';
-import { db, auth } from './firebase';
+import { supabase } from './supabase';
 import { Planet, Drop, UserProfile, TechCategory } from './types';
 import { 
   Search, 
@@ -32,7 +12,6 @@ import {
   Database, 
   LogOut, 
   LogIn, 
-  AlertCircle,
   Clock,
   Filter,
   Trash2,
@@ -40,8 +19,7 @@ import {
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-
-const GOOGLE_PROVIDER = new GoogleAuthProvider();
+import { User } from '@supabase/supabase-js';
 
 const CATEGORIES: TechCategory[] = ['WU', 'MU', 'SU', 'CU', 'Amarna', 'Soris', 'Giza'];
 
@@ -65,46 +43,84 @@ export default function App() {
 
   // Auth Listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      if (u) {
-        const userDoc = await getDoc(doc(db, 'users', u.uid));
-        if (userDoc.exists()) {
-          setProfile(userDoc.data() as UserProfile);
-        } else {
-          const newProfile: UserProfile = {
-            uid: u.uid,
-            email: u.email || '',
-            role: u.email === 'elton.duarteboss7@gmail.com' ? 'admin' : 'user'
-          };
-          await setDoc(doc(db, 'users', u.uid), newProfile);
-          setProfile(newProfile);
-        }
-      } else {
-        setProfile(null);
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) fetchProfile(session.user.id);
       setLoading(false);
     });
-    return unsubscribe;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) fetchProfile(session.user.id);
+      else setProfile(null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const fetchProfile = async (uid: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('uid', uid)
+      .single();
+    
+    if (error && error.code === 'PGRST116') {
+      // Create profile if not exists
+      const { data: userSession } = await supabase.auth.getSession();
+      const email = userSession.session?.user.email || '';
+      const newProfile: UserProfile = {
+        uid,
+        email,
+        role: email === 'elton.duarteboss7@gmail.com' ? 'admin' : 'user'
+      };
+      await supabase.from('profiles').insert([newProfile]);
+      setProfile(newProfile);
+    } else if (data) {
+      setProfile(data as UserProfile);
+    }
+  };
 
   // Data Listeners
   useEffect(() => {
-    const unsubPlanets = onSnapshot(query(collection(db, 'planets'), orderBy('ring', 'desc'), orderBy('name')), (snap) => {
-      setPlanets(snap.docs.map(d => ({ id: d.id, ...d.data() } as Planet)));
-    });
-    const unsubDrops = onSnapshot(query(collection(db, 'drops'), orderBy('updatedAt', 'desc')), (snap) => {
-      setDrops(snap.docs.map(d => ({ id: d.id, ...d.data() } as Drop)));
-    });
+    fetchPlanets();
+    fetchDrops();
+
+    const planetsSub = supabase
+      .channel('planets_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'planets' }, fetchPlanets)
+      .subscribe();
+
+    const dropsSub = supabase
+      .channel('drops_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'drops' }, fetchDrops)
+      .subscribe();
 
     return () => {
-      unsubPlanets();
-      unsubDrops();
+      planetsSub.unsubscribe();
+      dropsSub.unsubscribe();
     };
   }, []);
 
-  const handleLogin = () => signInWithPopup(auth, GOOGLE_PROVIDER);
-  const handleLogout = () => signOut(auth);
+  const fetchPlanets = async () => {
+    const { data } = await supabase
+      .from('planets')
+      .select('*')
+      .order('ring', { ascending: false })
+      .order('name');
+    if (data) setPlanets(data as Planet[]);
+  };
+
+  const fetchDrops = async () => {
+    const { data } = await supabase
+      .from('drops')
+      .select('*')
+      .order('updatedAt', { ascending: false });
+    if (data) setDrops(data as Drop[]);
+  };
+
+  const handleLogin = () => supabase.auth.signInWithOAuth({ provider: 'google' });
+  const handleLogout = () => supabase.auth.signOut();
 
   const filteredPlanets = useMemo(() => {
     return planets.filter(p => {
@@ -123,11 +139,11 @@ export default function App() {
     if (!user || !newDrop.planetId || !newDrop.techName) return;
 
     try {
-      await addDoc(collection(db, 'drops'), {
+      await supabase.from('drops').insert([{
         ...newDrop,
-        editor: user.displayName || user.email,
-        updatedAt: serverTimestamp()
-      });
+        editor: user.user_metadata.full_name || user.email,
+        updatedAt: new Date().toISOString()
+      }]);
       setShowAddModal(false);
       setNewDrop({ planetId: '', category: 'WU', techName: '', requester: '' });
     } catch (err) {
@@ -138,7 +154,7 @@ export default function App() {
   const handleDeleteDrop = async (id: string) => {
     if (!profile || profile.role !== 'admin') return;
     try {
-      await deleteDoc(doc(db, 'drops', id));
+      await supabase.from('drops').delete().eq('id', id);
     } catch (err) {
       console.error("Error deleting drop:", err);
     }
@@ -150,7 +166,7 @@ export default function App() {
     
     try {
       const { id, ...data } = editingPlanet;
-      await updateDoc(doc(db, 'planets', id), data);
+      await supabase.from('planets').update(data).eq('id', id);
       setEditingPlanet(null);
     } catch (err) {
       console.error("Error updating planet:", err);
@@ -175,9 +191,7 @@ export default function App() {
       { name: "Eqdocor", ring: 4, enemy: "Pirates", lastCM: "Resource War", status: "Active" },
     ];
 
-    for (const p of initialPlanets) {
-      await addDoc(collection(db, 'planets'), p);
-    }
+    await supabase.from('planets').insert(initialPlanets);
   };
 
   if (loading) {
@@ -204,7 +218,7 @@ export default function App() {
         <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-mono opacity-50 uppercase">{user.displayName}</span>
+              <span className="text-[10px] font-mono opacity-50 uppercase">{user.email}</span>
               <button 
                 onClick={handleLogout}
                 className="bg-[#333] hover:bg-[#444] px-3 py-1.5 text-[10px] uppercase font-bold transition-colors rounded"
@@ -287,10 +301,8 @@ export default function App() {
           </thead>
           <tbody>
             {filteredPlanets.map((planet, idx) => {
-              const isNewRing = idx === 0 || planets[idx-1].ring !== planet.ring;
               return (
                 <React.Fragment key={planet.id}>
-                  {/* Optional Ring Separator if needed, but the image shows them grouped */}
                   <tr className={`hover:bg-[#333] transition-colors ${planet.status === 'Collapsed' ? 'text-red-400' : ''}`}>
                     <td className="border border-[#333] p-2 text-center font-mono">{planet.ring}</td>
                     <td className="border border-[#333] p-2 text-center relative group">
@@ -334,10 +346,10 @@ export default function App() {
                     <td className="border border-[#333] p-2 text-center">{planet.lastCM}</td>
                     <td className="border border-[#333] p-2 text-center">{planet.baseCoords}</td>
                     <td className="border border-[#333] p-2 text-center font-mono text-[10px]">
-                      {planet.collapseTime?.toDate().toLocaleString() || '-'}
+                      {planet.collapseTime ? new Date(planet.collapseTime).toLocaleString() : '-'}
                     </td>
                     <td className="border border-[#333] p-2 text-center font-mono text-[10px]">
-                      {planet.respawnTime?.toDate().toLocaleString() || '-'}
+                      {planet.respawnTime ? new Date(planet.respawnTime).toLocaleString() : '-'}
                     </td>
                     <td className="border border-[#333] p-2 text-center opacity-70">
                       {drops.find(d => d.planetId === planet.id)?.editor || '-'}

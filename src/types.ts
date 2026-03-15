@@ -6,8 +6,8 @@ export interface Planet {
   quarcs?: string;
   lastCM?: string;
   baseCoords?: string;
-  collapseTime?: any; // Firestore Timestamp
-  respawnTime?: any; // Firestore Timestamp
+  collapseTime?: string; // ISO String
+  respawnTime?: string; // ISO String
   status?: 'Active' | 'Collapsed';
 }
 
@@ -20,7 +20,7 @@ export interface Drop {
   techName: string;
   editor?: string;
   requester?: string;
-  updatedAt: any; // Firestore Timestamp
+  updatedAt: string; // ISO String
 }
 
 export interface UserProfile {
