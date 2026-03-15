@@ -96,7 +96,11 @@ export default function App() {
 
   const fetchAllProfiles = async () => {
     if (profile?.role !== 'admin') return;
-    const { data } = await supabase.from('profiles').select('*');
+    const { data, error } = await supabase.from('profiles').select('*');
+    if (error) {
+      console.error("Error fetching profiles:", error);
+      return;
+    }
     if (data) setAllProfiles(data as UserProfile[]);
   };
 
@@ -145,7 +149,7 @@ export default function App() {
     const { data } = await supabase
       .from('drops')
       .select('*')
-      .order('updatedAt', { ascending: false });
+      .order('updated_at', { ascending: false });
     if (data) setDrops(data as Drop[]);
   };
 
@@ -179,16 +183,46 @@ export default function App() {
         setShowAuthModal(false);
       }
     } catch (err: any) {
-      // Translate technical email errors to Nickname terms
+      // Translate technical email errors to Nickname terms and make them friendlier
       let msg = err.message.toUpperCase();
-      msg = msg.replace(/EMAIL/g, 'NICKNAME');
+      
+      if (msg.includes('RATE LIMIT')) {
+        msg = 'TOO MANY ATTEMPTS. PLEASE WAIT A FEW MINUTES BEFORE TRYING AGAIN.';
+      } else if (msg.includes('INVALID LOGIN CREDENTIALS')) {
+        msg = 'WRONG NICKNAME OR PASSWORD.';
+      } else if (msg.includes('USER ALREADY REGISTERED')) {
+        msg = 'NICKNAME ALREADY TAKEN. CHOOSE ANOTHER ONE.';
+      } else {
+        msg = msg.replace(/EMAIL/g, 'NICKNAME');
+      }
+      
       setAuthError(msg);
     }
   };
 
   const approveUser = async (auth_id: string) => {
-    if (profile?.role !== 'admin') return;
-    await supabase.from('profiles').update({ approved: true }).eq('auth_id', auth_id);
+    console.log("Attempting to approve user:", auth_id);
+    if (profile?.role !== 'admin') {
+      console.warn("Permission denied: user is not an admin");
+      return;
+    }
+    
+    // Optimistic update
+    setAllProfiles(prev => prev.map(p => 
+      p.auth_id === auth_id ? { ...p, approved: true } : p
+    ));
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ approved: true })
+      .eq('auth_id', auth_id);
+    
+    if (error) {
+      console.error("Error approving user:", error);
+      // Revert optimistic update on error
+      fetchAllProfiles();
+      alert("Failed to approve user: " + error.message);
+    }
   };
 
   const createAdminProfileManually = async () => {
@@ -233,7 +267,7 @@ export default function App() {
       await supabase.from('drops').insert([{
         ...newDrop,
         editor: profile?.uid || user.email,
-        updatedAt: new Date().toISOString()
+        updated_at: new Date().toISOString()
       }]);
       setShowAddModal(false);
       setNewDrop({ planetId: '', category: 'WU', techName: '', requester: '' });

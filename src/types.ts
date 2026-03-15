@@ -20,7 +20,7 @@ export interface Drop {
   techName: string;
   editor?: string;
   requester?: string;
-  updatedAt: string; // ISO String
+  updated_at: string; // ISO String
 }
 
 export interface UserProfile {
