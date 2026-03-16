@@ -406,17 +406,34 @@ export default function App() {
 
     try {
       if (newDrop.id) {
-        // Update existing drop
-        const { error } = await supabase.from('drops').update({
+        // Update existing drop by deleting and inserting
+        const { data: deleteData, error: deleteError } = await supabase.from('drops').delete().eq('id', newDrop.id).select();
+        
+        if (deleteError) {
+          console.error("Delete error:", deleteError);
+          alert("Erro ao deletar o drop antigo: " + deleteError.message);
+          return;
+        }
+        
+        if (!deleteData || deleteData.length === 0) {
+          alert("Você não tem permissão para editar este drop ou ele não existe mais.");
+          return;
+        }
+        
+        const oldDrop = getDropsForPlanet(newDrop.planet_id, newDrop.category).find(d => d.id === newDrop.id);
+        const createdAt = oldDrop ? oldDrop.created_at : new Date().toISOString();
+
+        const { error: insertError } = await supabase.from('drops').insert([{
           planet_id: newDrop.planet_id,
           category: newDrop.category,
           tech_name: newDrop.tech_name,
-          editor: profile?.uid || user.email
-        }).eq('id', newDrop.id);
+          editor: profile?.uid || user.email,
+          created_at: createdAt
+        }]);
         
-        if (error) {
-          console.error("Update error:", error);
-          alert("Erro ao atualizar: " + error.message);
+        if (insertError) {
+          console.error("Insert error:", insertError);
+          alert("Erro ao atualizar (inserir novo): " + insertError.message);
           return;
         }
       } else {
@@ -1135,12 +1152,10 @@ export default function App() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Tech Name</label>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Tech Name (Auto)</label>
                     <input 
-                      type="text" 
-                      value={newDrop.tech_name}
-                      onChange={(e) => setNewDrop(prev => ({ ...prev, tech_name: e.target.value }))}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      type="text" readOnly value={newDrop.tech_name}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none opacity-50"
                     />
                   </div>
                   <div className="flex gap-3 pt-2">
