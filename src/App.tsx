@@ -59,7 +59,7 @@ const parseTechName = (techName: string) => {
   return { system, type, item };
 };
 
-// Mapeamento de ícones
+// Icon mapping
 const ITEM_ICONS: Record<string, string> = {
   'Blaster': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/blaster.png',
   'Collector': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/collector.png',
@@ -148,6 +148,7 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
@@ -166,11 +167,24 @@ export default function App() {
     if (!isoString) return '-';
     const date = new Date(isoString);
     if (isNaN(date.getTime())) return '-';
-    const pad = (n: number) => n.toString().padStart(2, '0');
+    
+    const edtString = date.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    
+    const [datePart, timePart] = edtString.split(', ');
+    
     return (
       <div className="flex flex-col items-center leading-tight">
-        <span>{`${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`}</span>
-        <span>{`${pad(date.getHours())}:${pad(date.getMinutes())}`}</span>
+        <span className="text-[9px] opacity-50">EDT</span>
+        <span>{datePart}</span>
+        <span>{timePart}</span>
       </div>
     );
   };
@@ -181,6 +195,36 @@ export default function App() {
     if (isNaN(collapseDate.getTime())) return false;
     return new Date() > collapseDate;
   };
+
+  const getEdtString = (date: Date) => {
+    return date.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  };
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const checkExpired = async () => {
+      const now = new Date();
+      const expiredPlanets = planets.filter(p => p.respawn_time && new Date(p.respawn_time) <= now);
+      if (expiredPlanets.length > 0) {
+        for (const planet of expiredPlanets) {
+          await supabase.from('planets').delete().eq('id', planet.id);
+        }
+        fetchPlanets();
+      }
+    };
+    const timer = setInterval(checkExpired, 10000);
+    return () => clearInterval(timer);
+  }, [planets]);
 
   const [newDrop, setNewDrop] = useState({ 
     id: '',
@@ -405,7 +449,7 @@ export default function App() {
       console.error("Error approving user:", error);
       // Revert optimistic update on error
       fetchAllProfiles();
-      alert("Failed to approve user: " + error.message);
+      console.error("Failed to approve user: " + error.message);
     }
   };
 
@@ -525,13 +569,12 @@ export default function App() {
         const { data: deleteData, error: deleteError } = await supabase.from('drops').delete().eq('id', newDrop.id).select();
         
         if (deleteError) {
-          console.error("Delete error:", deleteError);
-          alert("Erro ao deletar o drop antigo: " + deleteError.message);
+          console.error("Error deleting old drop: " + deleteError.message);
           return;
         }
         
         if (!deleteData || deleteData.length === 0) {
-          alert("Você não tem permissão para editar este drop ou ele não existe mais.");
+          console.warn("You don't have permission to edit this drop or it no longer exists.");
           return;
         }
         
@@ -547,19 +590,18 @@ export default function App() {
         }]);
         
         if (insertError) {
-          console.error("Insert error:", insertError);
-          alert("Erro ao atualizar (inserir novo): " + insertError.message);
+          console.error("Error updating (inserting new): " + insertError.message);
           return;
         }
       } else {
         // Insert new drop
         const existingDrops = getDropsForPlanet(newDrop.planet_id, newDrop.category);
         if (['WU', 'MU', 'SU', 'CU'].includes(newDrop.category) && existingDrops.length > 0) {
-          alert(`A categoria ${newDrop.category} já possui um item registrado neste planeta.`);
+          console.warn(`Category ${newDrop.category} already has an item registered on this planet.`);
           return;
         }
         if (['Amarna', 'Soris', 'Giza'].includes(newDrop.category) && existingDrops.length >= 3) {
-          alert(`${newDrop.category} só pode ter no máximo 3 tecnologias.`);
+          console.warn(`${newDrop.category} can have at most 3 technologies.`);
           return;
         }
         
@@ -572,8 +614,7 @@ export default function App() {
         }]);
         
         if (error) {
-          console.error("Insert error:", error);
-          alert("Erro ao inserir: " + error.message);
+          console.error("Error inserting: " + error.message);
           return;
         }
       }
@@ -582,8 +623,7 @@ export default function App() {
       setNewDrop({ id: '', planet_id: '', category: 'WU', tech_name: '', requester: '', system: '', item: '', type: '' });
       fetchDrops();
     } catch (err: any) {
-      console.error("Error adding/updating drop:", err);
-      alert("Erro inesperado: " + err.message);
+      console.error("Unexpected error: " + err.message);
     }
   };
 
@@ -654,13 +694,13 @@ export default function App() {
     
     if (restrictedCategories.includes(category)) {
       if (planet && planet.ring !== 5) {
-        alert(`${category} só pode ser adicionado em planetas R5.`);
+        console.warn(`${category} can only be added to R5 planets.`);
         return;
       }
       
       const techNames = value.split('\n').filter(t => t.trim() !== '');
       if (techNames.length > 3) {
-        alert(`${category} só pode ter no máximo 3 tecnologias.`);
+        console.warn(`${category} can have at most 3 technologies.`);
         return;
       }
     }
@@ -682,10 +722,19 @@ export default function App() {
   };
 
   const handleDeletePlanet = async (id: string) => {
-    if (!profile || profile.role !== 'admin') return;
-    if (!window.confirm('DELETE THIS PLANET AND ALL ITS DATA?')) return;
-    await supabase.from('planets').delete().eq('id', id);
-    fetchPlanets();
+    console.log("handleDeletePlanet called for:", id, "Profile:", profile);
+    if (!profile || profile.role !== 'admin') {
+      console.warn("Delete failed: User is not an admin or profile not loaded.");
+      return;
+    }
+    // Removed window.confirm as it doesn't work in iframes
+    const { error } = await supabase.from('planets').delete().eq('id', id);
+    if (error) {
+      console.error("Error deleting planet:", error);
+    } else {
+      console.log("Planet deleted successfully");
+      fetchPlanets();
+    }
   };
 
   const seedInitialData = async () => {
@@ -727,7 +776,13 @@ export default function App() {
         <div className="flex items-center gap-4">
           <div className="text-2xl font-bold tracking-tighter uppercase">Gaia</div>
           <div className="h-6 w-[1px] bg-[#333]" />
-          <div className="text-[10px] font-mono opacity-50 uppercase tracking-widest">Sirius Tracker</div>
+          <div className="flex flex-col">
+            <div className="text-[10px] font-mono opacity-50 uppercase tracking-widest">Sirius Tracker</div>
+            <div className="flex items-center gap-2">
+              <span className="text-[8px] font-mono opacity-30 uppercase">EDT:</span>
+              <span className="text-[10px] font-mono font-bold text-[#90EE90]">{getEdtString(currentTime)}</span>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -780,6 +835,21 @@ export default function App() {
         </div>
       </header>
 
+      {/* Community Notice */}
+      <div className="bg-[#1A1A1A] border-b border-[#333] px-4 py-2">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <div className="bg-[#90EE90]/10 p-1.5 rounded">
+            <Database size={14} className="text-[#90EE90]" />
+          </div>
+          <p className="text-[10px] md:text-[11px] leading-relaxed opacity-70 italic">
+            <span className="font-bold text-[#90EE90] not-italic mr-1">Community Notice:</span>
+            We kindly ask all members to maintain a spirit of cordiality and responsibility. 
+            The integrity of this database depends on accurate information and mutual respect. 
+            Please ensure all entries are verified and help us preserve this collective resource for everyone.
+          </p>
+        </div>
+      </div>
+
       <main className="p-4 overflow-x-auto">
         {/* Toolbar */}
         <div className="flex flex-wrap gap-4 mb-4 items-center">
@@ -827,7 +897,7 @@ export default function App() {
                 className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-xs font-bold rounded hover:opacity-90"
               >
                 <Edit2 size={14} />
-                Editar Drop
+                Edit Drop
               </button>
             </div>
           )}
@@ -1210,7 +1280,7 @@ export default function App() {
                 initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
                 className="relative w-full max-w-md bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
               >
-                <h2 className="text-lg font-bold mb-4 uppercase tracking-tight">Editar Drop</h2>
+                <h2 className="text-lg font-bold mb-4 uppercase tracking-tight">Edit Drop</h2>
                 <form onSubmit={handleAddDrop} className="space-y-4">
                   <div>
                     <label className="text-[10px] uppercase opacity-50 block mb-1">Planet</label>
@@ -1236,7 +1306,7 @@ export default function App() {
                   
                   {newDrop.planet_id && newDrop.category && getDropsForPlanet(newDrop.planet_id, newDrop.category).length > 0 && (
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Ação</label>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Action</label>
                       <select 
                         value={newDrop.id}
                         onChange={(e) => {
@@ -1260,9 +1330,9 @@ export default function App() {
                         }}
                         className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
                       >
-                        {(['WU', 'MU', 'SU', 'CU'].includes(newDrop.category) || (['Amarna', 'Soris', 'Giza'].includes(newDrop.category) && getDropsForPlanet(newDrop.planet_id, newDrop.category).length >= 3)) ? null : <option value="">-- Adicionar Novo --</option>}
+                        {(['WU', 'MU', 'SU', 'CU'].includes(newDrop.category) || (['Amarna', 'Soris', 'Giza'].includes(newDrop.category) && getDropsForPlanet(newDrop.planet_id, newDrop.category).length >= 3)) ? null : <option value="">-- Add New --</option>}
                         {getDropsForPlanet(newDrop.planet_id, newDrop.category).map(d => (
-                          <option key={d.id} value={d.id}>Editar: {formatTechName(d.tech_name)}</option>
+                          <option key={d.id} value={d.id}>Edit: {formatTechName(d.tech_name)}</option>
                         ))}
                       </select>
                     </div>
@@ -1308,8 +1378,8 @@ export default function App() {
                     />
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-[#333] py-2 text-xs font-bold rounded">Cancelar</button>
-                    <button type="submit" className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded">Salvar Drop</button>
+                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-[#333] py-2 text-xs font-bold rounded">Cancel</button>
+                    <button type="submit" className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded">Save Drop</button>
                   </div>
                 </form>
               </motion.div>
