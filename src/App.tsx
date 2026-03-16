@@ -17,7 +17,8 @@ import {
   Trash2,
   Edit2,
   X,
-  MessageSquare
+  MessageSquare,
+  HelpCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { User } from '@supabase/supabase-js';
@@ -1014,21 +1015,62 @@ export default function App() {
         </div>
 
         {/* Database Table */}
-        <div className="bg-[#2A2A2A] rounded overflow-hidden border border-[#333]">
+        <div className="bg-[#2A2A2A] rounded overflow-visible border border-[#333]">
           <table className="w-full border-collapse text-[11px] min-w-[1400px]">
             <thead>
               <tr className="bg-[#5CB85C] text-[#1A1A1A] font-bold uppercase">
-                <th className="border border-[#444] p-1 w-16">Ring</th>
+                <th className="border border-[#444] p-1 w-16 rounded-tl">Ring</th>
                 <th className="border border-[#444] p-1 w-40">Name</th>
                 {CATEGORIES.map(cat => (
-                  <th key={cat} className={`border border-[#444] p-1 w-32 text-center`}>{cat}</th>
+                  <th key={cat} className="border border-[#444] p-1 w-32 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      {cat}
+                      <div className="relative flex items-center group/tooltip">
+                        <HelpCircle className="w-2.5 h-2.5 text-[#1A1A1A] opacity-50 hover:opacity-100 cursor-help" />
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 hidden group-hover/tooltip:block w-max min-w-[140px] bg-[#1A1A1A] text-white border border-[#444] rounded shadow-2xl p-2 text-left z-50 text-[9px] font-normal normal-case">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="font-bold text-[#90EE90]">PT:</span>
+                              <span className="opacity-90 text-right">{
+                                cat === 'WU' ? 'Unidades Fracas' :
+                                cat === 'MU' ? 'Unidades Médias' :
+                                cat === 'SU' ? 'Unidades Fortes' :
+                                cat === 'CU' ? 'Unidades Comandantes (Chefe)' :
+                                'Grande Chefe'
+                              }</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="font-bold text-[#90EE90]">EN:</span>
+                              <span className="opacity-90 text-right">{
+                                cat === 'WU' ? 'Weak Units' :
+                                cat === 'MU' ? 'Medium Units' :
+                                cat === 'SU' ? 'Strong Units' :
+                                cat === 'CU' ? 'Commander Units (Boss)' :
+                                'Big Boss'
+                              }</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="font-bold text-[#90EE90]">ES:</span>
+                              <span className="opacity-90 text-right">{
+                                cat === 'WU' ? 'Unidades Débiles' :
+                                cat === 'MU' ? 'Unidades Medias' :
+                                cat === 'SU' ? 'Unidades Fuertes' :
+                                cat === 'CU' ? 'Unidades Comandantes (Jefe)' :
+                                'Gran Jefe'
+                              }</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </th>
                 ))}
                 <th className="border border-[#444] p-1 w-24">Enemy</th>
                 <th className="border border-[#444] p-1 w-24">Quarcs</th>
                 <th className="border border-[#444] p-1 w-24">Collapse</th>
                 <th className="border border-[#444] p-1 w-24">Respawn</th>
                 <th className="border border-[#444] p-1 w-24">Editor</th>
-                <th className="border border-[#444] p-1 w-24">Requester</th>
+                <th className="border border-[#444] p-1 w-24 rounded-tr">Requester</th>
               </tr>
             </thead>
             <tbody>
