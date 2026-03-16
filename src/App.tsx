@@ -407,11 +407,18 @@ export default function App() {
     try {
       if (newDrop.id) {
         // Update existing drop
-        await supabase.from('drops').update({
+        const { error } = await supabase.from('drops').update({
+          planet_id: newDrop.planet_id,
+          category: newDrop.category,
           tech_name: newDrop.tech_name,
-          editor: profile?.uid || user.email,
-          created_at: new Date().toISOString()
+          editor: profile?.uid || user.email
         }).eq('id', newDrop.id);
+        
+        if (error) {
+          console.error("Update error:", error);
+          alert("Erro ao atualizar: " + error.message);
+          return;
+        }
       } else {
         // Insert new drop
         const existingDrops = getDropsForPlanet(newDrop.planet_id, newDrop.category);
@@ -424,20 +431,27 @@ export default function App() {
           return;
         }
         
-        await supabase.from('drops').insert([{
+        const { error } = await supabase.from('drops').insert([{
           planet_id: newDrop.planet_id,
           category: newDrop.category,
           tech_name: newDrop.tech_name,
           editor: profile?.uid || user.email,
           created_at: new Date().toISOString()
         }]);
+        
+        if (error) {
+          console.error("Insert error:", error);
+          alert("Erro ao inserir: " + error.message);
+          return;
+        }
       }
       
       setShowAddModal(false);
       setNewDrop({ id: '', planet_id: '', category: 'WU', tech_name: '', requester: '', system: '', item: '', type: '' });
       fetchDrops();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error adding/updating drop:", err);
+      alert("Erro inesperado: " + err.message);
     }
   };
 
@@ -1121,10 +1135,12 @@ export default function App() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Tech Name (Auto)</label>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Tech Name</label>
                     <input 
-                      type="text" readOnly value={newDrop.tech_name}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none opacity-50"
+                      type="text" 
+                      value={newDrop.tech_name}
+                      onChange={(e) => setNewDrop(prev => ({ ...prev, tech_name: e.target.value }))}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
                     />
                   </div>
                   <div className="flex gap-3 pt-2">
