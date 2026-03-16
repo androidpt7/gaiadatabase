@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from './supabase';
-import { Planet, Drop, UserProfile, TechCategory } from './types';
+import { Planet, Drop, UserProfile, TechCategory, Message } from './types';
 import { 
   Search, 
   Plus, 
@@ -16,7 +16,8 @@ import {
   Filter,
   Trash2,
   Edit2,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { User } from '@supabase/supabase-js';
@@ -154,6 +155,12 @@ export default function App() {
   const [authError, setAuthError] = useState('');
   const [editingPlanet, setEditingPlanet] = useState<Planet | null>(null);
   const [isSpreadsheetMode, setIsSpreadsheetMode] = useState(true);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestPlanetId, setRequestPlanetId] = useState('');
+  const [requestContent, setRequestContent] = useState('');
+  const [requestSenderName, setRequestSenderName] = useState('');
+  const [adminTab, setAdminTab] = useState<'users' | 'messages'>('users');
   
   const formatForInput = (isoString?: string) => {
     if (!isoString) return '';
@@ -379,6 +386,71 @@ export default function App() {
       .select('*')
       .order('created_at', { ascending: false });
     if (data) setDrops(data as Drop[]);
+  };
+
+  const fetchMessages = async () => {
+    if (profile?.role !== 'admin') return;
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error("Error fetching messages:", error);
+      return;
+    }
+    if (data) setMessages(data as Message[]);
+  };
+
+  useEffect(() => {
+    if (profile?.role === 'admin' && showAdminModal) {
+      fetchMessages();
+      const sub = supabase
+        .channel('messages_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, fetchMessages)
+        .subscribe();
+      return () => { sub.unsubscribe(); };
+    }
+  }, [profile, showAdminModal]);
+
+  const handleSendRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!requestPlanetId || !requestContent) return;
+
+    const { error } = await supabase.from('messages').insert([{
+      planet_id: requestPlanetId,
+      content: requestContent,
+      sender_name: requestSenderName || 'Anonymous',
+      status: 'pending'
+    }]);
+
+    if (error) {
+      console.error("Error sending request:", error);
+      alert("Error sending request. Please try again.");
+    } else {
+      setShowRequestModal(false);
+      setRequestPlanetId('');
+      setRequestContent('');
+      setRequestSenderName('');
+      alert("Request sent successfully!");
+    }
+  };
+
+  const handleUpdateMessageStatus = async (id: string, status: Message['status']) => {
+    const { error } = await supabase
+      .from('messages')
+      .update({ status })
+      .eq('id', id);
+    if (error) console.error("Error updating message status:", error);
+    else fetchMessages();
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', id);
+    if (error) console.error("Error deleting message:", error);
+    else fetchMessages();
   };
 
   const handleLogin = () => setShowAuthModal(true);
@@ -829,7 +901,11 @@ export default function App() {
               Editor Login
             </button>
           )}
-          <button className="bg-[#333] hover:bg-[#444] px-4 py-1.5 text-[10px] uppercase font-bold transition-colors rounded">
+          <button 
+            onClick={() => setShowRequestModal(true)}
+            className="bg-[#333] hover:bg-[#444] px-4 py-1.5 text-[10px] uppercase font-bold transition-colors rounded flex items-center gap-2"
+          >
+            <MessageSquare size={12} />
             Request
           </button>
         </div>
@@ -1235,36 +1311,167 @@ export default function App() {
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdminModal(false)} />
               <motion.div 
                 initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-                className="relative w-full max-w-2xl bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
+                className="relative w-full max-w-2xl bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl flex flex-col max-h-[90vh]"
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-lg font-bold uppercase tracking-tight">User Management</h2>
+                  <h2 className="text-lg font-bold uppercase tracking-tight">Admin Panel</h2>
                   <button onClick={() => setShowAdminModal(false)}><X size={18} /></button>
                 </div>
+
+                <div className="flex gap-4 mb-6 border-b border-[#333]">
+                  <button 
+                    onClick={() => setAdminTab('users')}
+                    className={`pb-2 text-xs font-bold uppercase tracking-wider transition-colors ${adminTab === 'users' ? 'text-[#90EE90] border-b-2 border-[#90EE90]' : 'opacity-50 hover:opacity-100'}`}
+                  >
+                    Users
+                  </button>
+                  <button 
+                    onClick={() => setAdminTab('messages')}
+                    className={`pb-2 text-xs font-bold uppercase tracking-wider transition-colors ${adminTab === 'messages' ? 'text-[#90EE90] border-b-2 border-[#90EE90]' : 'opacity-50 hover:opacity-100'}`}
+                  >
+                    Messages
+                    {messages.filter(m => m.status === 'pending').length > 0 && (
+                      <span className="ml-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full">
+                        {messages.filter(m => m.status === 'pending').length}
+                      </span>
+                    )}
+                  </button>
+                </div>
                 
-                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                  {allProfiles.filter(p => p.role !== 'admin').map(p => (
-                    <div key={p.auth_id} className="bg-[#2A2A2A] p-4 rounded border border-[#333] flex items-center justify-center gap-4">
-                      <div className="flex-1">
-                        <div className="text-xs font-bold">{p.uid}</div>
-                        <div className={`text-[9px] uppercase font-bold ${p.approved ? 'text-[#90EE90]' : 'text-yellow-500'}`}>
-                          {p.approved ? 'Approved' : 'Pending Approval'}
+                <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+                  {adminTab === 'users' ? (
+                    <>
+                      {allProfiles.filter(p => p.role !== 'admin').map(p => (
+                        <div key={p.auth_id} className="bg-[#2A2A2A] p-4 rounded border border-[#333] flex items-center justify-center gap-4">
+                          <div className="flex-1">
+                            <div className="text-xs font-bold">{p.uid}</div>
+                            <div className={`text-[9px] uppercase font-bold ${p.approved ? 'text-[#90EE90]' : 'text-yellow-500'}`}>
+                              {p.approved ? 'Approved' : 'Pending Approval'}
+                            </div>
+                          </div>
+                          {!p.approved && (
+                            <button 
+                              onClick={() => approveUser(p.auth_id)}
+                              className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[10px] uppercase font-bold rounded hover:opacity-90"
+                            >
+                              Approve
+                            </button>
+                          )}
                         </div>
-                      </div>
-                      {!p.approved && (
-                        <button 
-                          onClick={() => approveUser(p.auth_id)}
-                          className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[10px] uppercase font-bold rounded hover:opacity-90"
-                        >
-                          Approve
-                        </button>
+                      ))}
+                      {allProfiles.filter(p => p.role !== 'admin').length === 0 && (
+                        <p className="text-center text-xs opacity-50 py-8">No users found.</p>
                       )}
-                    </div>
-                  ))}
-                  {allProfiles.filter(p => p.role !== 'admin').length === 0 && (
-                    <p className="text-center text-xs opacity-50 py-8">No users found.</p>
+                    </>
+                  ) : (
+                    <>
+                      {messages.map(m => {
+                        const planet = planets.find(p => p.id === m.planet_id);
+                        return (
+                          <div key={m.id} className={`bg-[#2A2A2A] p-4 rounded border border-[#333] space-y-2 ${m.status === 'pending' ? 'border-l-4 border-l-[#90EE90]' : ''}`}>
+                            <div className="flex justify-between items-start">
+                              <div className="text-[10px] font-bold uppercase text-[#90EE90]">
+                                Planet: {planet?.name || 'Unknown'}
+                              </div>
+                              <div className="text-[8px] opacity-50">
+                                {new Date(m.created_at).toLocaleString()}
+                              </div>
+                            </div>
+                            <p className="text-xs italic opacity-80">"{m.content}"</p>
+                            <div className="flex justify-between items-center pt-2">
+                              <div className="text-[9px] opacity-50 uppercase">From: {m.sender_name}</div>
+                              <div className="flex gap-2">
+                                {m.status === 'pending' && (
+                                  <button 
+                                    onClick={() => handleUpdateMessageStatus(m.id, 'read')}
+                                    className="text-[9px] uppercase font-bold text-[#90EE90] hover:underline"
+                                  >
+                                    Mark as Read
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => handleDeleteMessage(m.id)}
+                                  className="text-[9px] uppercase font-bold text-red-400 hover:underline"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {messages.length === 0 && (
+                        <p className="text-center text-xs opacity-50 py-8">No messages found.</p>
+                      )}
+                    </>
                   )}
                 </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {showRequestModal && (
+            <motion.div 
+              key="request-modal"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowRequestModal(false)} />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                className="relative w-full max-w-md bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-bold uppercase tracking-tight">Send Request</h2>
+                  <button onClick={() => setShowRequestModal(false)}><X size={18} /></button>
+                </div>
+
+                <form onSubmit={handleSendRequest} className="space-y-4">
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Planet (Required)</label>
+                    <select 
+                      required
+                      value={requestPlanetId}
+                      onChange={(e) => setRequestPlanetId(e.target.value)}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                    >
+                      <option value="">Select Planet...</option>
+                      {planets.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} (R{p.ring})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Your Name (Optional)</label>
+                    <input 
+                      type="text"
+                      value={requestSenderName}
+                      onChange={(e) => setRequestSenderName(e.target.value)}
+                      placeholder="Anonymous"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Message (Required)</label>
+                    <textarea 
+                      required
+                      value={requestContent}
+                      onChange={(e) => setRequestContent(e.target.value)}
+                      placeholder="Type your message here..."
+                      rows={4}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90] resize-none"
+                    />
+                  </div>
+
+                  <button 
+                    type="submit"
+                    className="w-full bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded uppercase tracking-wider hover:opacity-90 transition-opacity"
+                  >
+                    Send Request
+                  </button>
+                </form>
               </motion.div>
             </motion.div>
           )}

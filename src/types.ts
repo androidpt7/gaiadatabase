@@ -34,3 +34,12 @@ export interface UserProfile {
   role: 'admin' | 'user';
   approved: boolean;
 }
+
+export interface Message {
+  id: string;
+  created_at: string;
+  planet_id: string;
+  content: string;
+  sender_name?: string;
+  status: 'pending' | 'read' | 'resolved';
+}
