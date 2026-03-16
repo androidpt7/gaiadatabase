@@ -1059,6 +1059,16 @@ export default function App() {
                                 'Gran Jefe'
                               }</span>
                             </div>
+                            <div className="pt-1 mt-1 border-t border-[#444] flex items-center justify-between gap-3">
+                              <span className="font-bold text-[#FFD700]">Needed BP's:</span>
+                              <span className="opacity-90 text-right font-bold">{
+                                cat === 'WU' ? '18' :
+                                cat === 'MU' ? '14' :
+                                cat === 'SU' ? '12' :
+                                cat === 'CU' ? '5' :
+                                '2'
+                              }</span>
+                            </div>
                           </div>
                         </div>
                       </div>
