@@ -25,36 +25,66 @@ const CATEGORIES: TechCategory[] = ['WU', 'MU', 'SU', 'CU', 'Amarna', 'Soris', '
 const ENEMY_OPTIONS = ['-', 'Ancient', 'Mantis', 'Pirates', 'Methanoid', 'Imperials'];
 const QUARCS_OPTIONS = ['-', 'Ecoglyte', 'Oolyte', 'Dolomyte', 'Kenyte', 'Clay'];
 
+const parseTechName = (techName: string) => {
+  if (!techName) return { system: '', type: 'Normal', item: '' };
+
+  const sysMapRev: Record<string, string> = {
+    'V': 'Vega', 'A': 'Antares', 'G': 'Gemini', 'M': 'Mizar', 'S': 'Sol', 'D': 'Draconis', 'Si': 'Sirius'
+  };
+  const typeMapRev: Record<string, string> = {
+    'R': 'Rapid', 'L': 'Long', 'St': 'Strong'
+  };
+  
+  let system = '';
+  let type = 'Normal';
+  let item = techName;
+
+  const parts = techName.split(' ');
+  if (parts.length >= 2) {
+    if (sysMapRev[parts[0]]) {
+      system = sysMapRev[parts[0]];
+      if (typeMapRev[parts[1]]) {
+        type = typeMapRev[parts[1]];
+        item = parts.slice(2).join(' ');
+      } else {
+        item = parts.slice(1).join(' ');
+      }
+    }
+  }
+
+  return { system, type, item };
+};
+
 // Mapeamento de ícones
 const ITEM_ICONS: Record<string, string> = {
-  'Blasters': 'https://github.com/androidpt7/itempg/blob/main/icons/blaster.png?raw=true',
-  'Collectors': 'https://github.com/androidpt7/itempg/blob/main/icons/collector.png?raw=true',
-  'Repair Droids': 'https://github.com/androidpt7/itempg/blob/main/icons/repair_droid.png?raw=true',
-  'Afterburners': 'https://github.com/androidpt7/itempg/blob/main/icons/afterburner.png?raw=true',
-  'Rockets': 'https://github.com/androidpt7/itempg/blob/main/icons/rockets.png?raw=true',
-  'Shields': 'https://github.com/androidpt7/itempg/blob/main/icons/shield.png?raw=true',
-  'Repair Targets': 'https://github.com/androidpt7/itempg/blob/main/icons/repair_target.png?raw=true',
-  'Speed Actuators': 'https://github.com/androidpt7/itempg/blob/main/icons/speed_actuator.png?raw=true',
-  'Aim Computers': 'https://github.com/androidpt7/itempg/blob/main/icons/aim_computer.png?raw=true',
-  'Taunts': 'https://github.com/androidpt7/itempg/blob/main/icons/taunt.png?raw=true',
-  'Protectors': 'https://github.com/androidpt7/itempg/blob/main/icons/protector.png?raw=true',
-  'Stun Charges': 'https://github.com/androidpt7/itempg/blob/main/icons/stun_charge.png?raw=true',
-  'Perforators': 'https://github.com/androidpt7/itempg/blob/main/icons/perforator.png?raw=true',
-  'Aim Scramblers': 'https://github.com/androidpt7/itempg/blob/main/icons/aim_scrambler.png?raw=true',
-  'Repair Fields': 'https://github.com/androidpt7/itempg/blob/main/icons/repair_field.png?raw=true',
-  'Aggro Beacons': 'https://github.com/androidpt7/itempg/blob/main/icons/aggro_beacon.png?raw=true',
-  'Thermoblasts': 'https://github.com/androidpt7/itempg/blob/main/icons/thermoblast.png?raw=true',
-  'Aggro Bombs': 'https://github.com/androidpt7/itempg/blob/main/icons/aggro_bomb.png?raw=true',
-  'Materializers': 'https://github.com/androidpt7/itempg/blob/main/icons/materializer.png?raw=true',
-  'Stun Domes': 'https://github.com/androidpt7/itempg/blob/main/icons/stun_dome.png?raw=true',
-  'Sniper Blasters': 'https://github.com/androidpt7/itempg/blob/main/icons/sniper_blaster.png?raw=true',
-  'Attack Droids': 'https://github.com/androidpt7/itempg/blob/main/icons/attack_droid.png?raw=true',
-  'Orbital Strikes': 'https://github.com/androidpt7/itempg/blob/main/icons/orbital.png?raw=true',
-  'Attack Charges': 'https://github.com/androidpt7/itempg/blob/main/icons/attack_charge.png?raw=true',
-  'Repair Turrets': 'https://github.com/androidpt7/itempg/blob/main/icons/repair_turret.png?raw=true',
-  'Attack Turrets': 'https://github.com/androidpt7/itempg/blob/main/icons/attack_turret.png?raw=true',
-  'Sticky Bombs': 'https://github.com/androidpt7/itempg/blob/main/icons/sticky_bomb.png?raw=true',
-  'Minelayers': 'https://github.com/androidpt7/itempg/blob/main/icons/mine.png?raw=true',
+  'Blasters': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/blaster.png',
+  'Collectors': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/collector.png',
+  'Repair Droids': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_droid.png',
+  'Afterburners': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/afterburner.png',
+  'Rockets': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/rockets.png',
+  'Shields': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/shield.png',
+  'Repair Targets': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_target.png',
+  'Speed Actuators': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/speed_actuator.png',
+  'Aim Computers': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aim_computer.png',
+  'Taunts': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/taunt.png',
+  'Protectors': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/protector.png',
+  'Stun Charges': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/stun_charge.png',
+  'Perforators': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/perforator.png',
+  'Aim Scramblers': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aim_scrambler.png',
+  'Repair Fields': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_field.png',
+  'Aggro Beacons': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aggro_beacon.png',
+  'Thermoblasts': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/thermoblast.png',
+  'Aggro Bombs': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aggro_bomb.png',
+  'Materializers': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/materializer.png',
+  'Stun Domes': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/stun_dome.png',
+  'Sniper Blasters': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/sniper_blaster.png',
+  'Attack Droids': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/attack_droid.png',
+  'Orbital Strikes': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/orbital.png',
+  'Attack Charges': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/attack_charge.png',
+  'Repair Turrets': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_turret.png',
+  'Attack Turrets': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/attack_turret.png',
+  'Sticky Bombs': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/sticky_bomb.png',
+  'Minelayers': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/mine.png',
 };
 
 export default function App() {
@@ -79,6 +109,7 @@ export default function App() {
   const [isSpreadsheetMode, setIsSpreadsheetMode] = useState(true);
   
   const [newDrop, setNewDrop] = useState({ 
+    id: '',
     planet_id: '', 
     category: 'WU' as TechCategory, 
     tech_name: '',
@@ -342,20 +373,71 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    if (showAddModal && newDrop.planet_id && newDrop.category) {
+      const existingDrops = getDropsForPlanet(newDrop.planet_id, newDrop.category);
+      if (existingDrops.length > 0) {
+        const dropToEdit = existingDrops[0];
+        const parsed = parseTechName(dropToEdit.tech_name);
+        setNewDrop(prev => ({
+          ...prev,
+          id: dropToEdit.id,
+          system: parsed.system,
+          type: parsed.type,
+          item: parsed.item,
+          tech_name: dropToEdit.tech_name
+        }));
+      } else {
+        setNewDrop(prev => ({
+          ...prev,
+          id: '',
+          system: '',
+          type: '',
+          item: '',
+          tech_name: ''
+        }));
+      }
+    }
+  }, [newDrop.planet_id, newDrop.category, showAddModal]);
+
   const handleAddDrop = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newDrop.planet_id || !newDrop.tech_name || !newDrop.system || !newDrop.type) return;
+    if (!user || !newDrop.planet_id || !newDrop.tech_name || !newDrop.system || !newDrop.type || !newDrop.item) return;
 
     try {
-      await supabase.from('drops').insert([{
-        ...newDrop,
-        editor: profile?.uid || user.email,
-        created_at: new Date().toISOString()
-      }]);
+      if (newDrop.id) {
+        // Update existing drop
+        await supabase.from('drops').update({
+          tech_name: newDrop.tech_name,
+          editor: profile?.uid || user.email,
+          created_at: new Date().toISOString()
+        }).eq('id', newDrop.id);
+      } else {
+        // Insert new drop
+        const existingDrops = getDropsForPlanet(newDrop.planet_id, newDrop.category);
+        if (['WU', 'MU', 'SU', 'CU'].includes(newDrop.category) && existingDrops.length > 0) {
+          alert(`A categoria ${newDrop.category} já possui um item registrado neste planeta.`);
+          return;
+        }
+        if (['Amarna', 'Soris', 'Giza'].includes(newDrop.category) && existingDrops.length >= 3) {
+          alert(`${newDrop.category} só pode ter no máximo 3 tecnologias.`);
+          return;
+        }
+        
+        await supabase.from('drops').insert([{
+          planet_id: newDrop.planet_id,
+          category: newDrop.category,
+          tech_name: newDrop.tech_name,
+          editor: profile?.uid || user.email,
+          created_at: new Date().toISOString()
+        }]);
+      }
+      
       setShowAddModal(false);
-      setNewDrop({ planet_id: '', category: 'WU', tech_name: '', requester: '', system: '', item: '', type: '' });
+      setNewDrop({ id: '', planet_id: '', category: 'WU', tech_name: '', requester: '', system: '', item: '', type: '' });
+      fetchDrops();
     } catch (err) {
-      console.error("Error adding drop:", err);
+      console.error("Error adding/updating drop:", err);
     }
   };
 
@@ -569,8 +651,8 @@ export default function App() {
                 onClick={() => setShowAddModal(true)}
                 className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-xs font-bold rounded hover:opacity-90"
               >
-                <Plus size={14} />
-                Add Drop
+                <Edit2 size={14} />
+                Editar Drop
               </button>
             </div>
           )}
@@ -592,12 +674,9 @@ export default function App() {
                 ))}
                 <th className="border border-[#444] p-1 w-24">Enemy</th>
                 <th className="border border-[#444] p-1 w-24">Quarcs</th>
-                <th className="border border-[#444] p-1 w-24">Last CM</th>
-                <th className="border border-[#444] p-1 w-32">Base Coords</th>
                 <th className="border border-[#444] p-1 w-24">Collapse</th>
                 <th className="border border-[#444] p-1 w-24">Respawn</th>
                 <th className="border border-[#444] p-1 w-24">Editor</th>
-                <th className="border border-[#444] p-1 w-24">Request</th>
               </tr>
             </thead>
             <tbody>
@@ -653,14 +732,20 @@ export default function App() {
 
                           ) : (
                             <div className="flex flex-col items-center justify-center gap-0.5 h-full">
-                              {planetDrops.map(drop => (
-                                <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate w-full flex items-center gap-1">
-                                  {ITEM_ICONS[drop.item] && (
-                                    <img src={ITEM_ICONS[drop.item]} alt={drop.item} className="w-3 h-3 object-contain" referrerPolicy="no-referrer" />
-                                  )}
-                                  {drop.tech_name}
-                                </div>
-                              ))}
+                              {planetDrops.map(drop => {
+                                const parsed = parseTechName(drop.tech_name);
+                                return (
+                                  <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate w-full flex items-center gap-1">
+                                    {(() => {
+                                      const iconKey = ITEM_ICONS[parsed.item] ? parsed.item : (parsed.item.endsWith('s') ? parsed.item.slice(0, -1) : parsed.item);
+                                      return ITEM_ICONS[iconKey] ? (
+                                        <img src={ITEM_ICONS[iconKey]} alt={parsed.item} className="w-3 h-3 object-contain" referrerPolicy="no-referrer" />
+                                      ) : null;
+                                    })()}
+                                    <span className={parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{drop.tech_name}</span>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </td>
@@ -692,32 +777,6 @@ export default function App() {
                         </select>
                       ) : (
                         <div className="text-center">{planet.quarcs || '-'}</div>
-                      )}
-                    </td>
-
-                    <td className="border border-[#444] p-1">
-                      {isEditing ? (
-                        <input 
-                          type="text" 
-                          value={planet.last_cm || ''}
-                          onChange={(e) => updatePlanetField(planet.id, 'last_cm', e.target.value)}
-                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
-                        />
-                      ) : (
-                        <div className="text-center text-[10px]">{planet.last_cm || '-'}</div>
-                      )}
-                    </td>
-
-                    <td className="border border-[#444] p-1">
-                      {isEditing ? (
-                        <input 
-                          type="text" 
-                          value={planet.base_coords || ''}
-                          onChange={(e) => updatePlanetField(planet.id, 'base_coords', e.target.value)}
-                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
-                        />
-                      ) : (
-                        <div className="text-center text-[10px]">{planet.base_coords || '-'}</div>
                       )}
                     </td>
 
@@ -780,19 +839,6 @@ export default function App() {
                         />
                       ) : (
                         <div className="text-center text-[10px]">{planet.editor || '-'}</div>
-                      )}
-                    </td>
-
-                    <td className="border border-[#444] p-1">
-                      {isEditing ? (
-                        <input 
-                          type="text" 
-                          value={planet.requester || ''}
-                          onChange={(e) => updatePlanetField(planet.id, 'requester', e.target.value)}
-                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
-                        />
-                      ) : (
-                        <div className="text-center text-[10px]">{planet.requester || '-'}</div>
                       )}
                     </td>
                   </tr>
@@ -984,7 +1030,7 @@ export default function App() {
                 initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
                 className="relative w-full max-w-md bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
               >
-                <h2 className="text-lg font-bold mb-4 uppercase tracking-tight">Report Drop</h2>
+                <h2 className="text-lg font-bold mb-4 uppercase tracking-tight">Editar Drop</h2>
                 <form onSubmit={handleAddDrop} className="space-y-4">
                   <div>
                     <label className="text-[10px] uppercase opacity-50 block mb-1">Planet</label>
@@ -1007,6 +1053,40 @@ export default function App() {
                       {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
                   </div>
+                  
+                  {newDrop.planet_id && newDrop.category && getDropsForPlanet(newDrop.planet_id, newDrop.category).length > 0 && (
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Ação</label>
+                      <select 
+                        value={newDrop.id}
+                        onChange={(e) => {
+                          const selectedId = e.target.value;
+                          if (selectedId === '') {
+                            setNewDrop(prev => ({ ...prev, id: '', system: '', type: '', item: '', tech_name: '' }));
+                          } else {
+                            const drop = getDropsForPlanet(newDrop.planet_id, newDrop.category).find(d => d.id === selectedId);
+                            if (drop) {
+                              const parsed = parseTechName(drop.tech_name);
+                              setNewDrop(prev => ({
+                                ...prev,
+                                id: drop.id,
+                                system: parsed.system,
+                                type: parsed.type,
+                                item: parsed.item,
+                                tech_name: drop.tech_name
+                              }));
+                            }
+                          }
+                        }}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      >
+                        {['WU', 'MU', 'SU', 'CU'].includes(newDrop.category) ? null : <option value="">-- Adicionar Novo --</option>}
+                        {getDropsForPlanet(newDrop.planet_id, newDrop.category).map(d => (
+                          <option key={d.id} value={d.id}>Editar: {d.tech_name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div>
                     <label className="text-[10px] uppercase opacity-50 block mb-1">System</label>
                     <select 
@@ -1047,17 +1127,9 @@ export default function App() {
                       className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none opacity-50"
                     />
                   </div>
-                  <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Requester (Optional)</label>
-                    <input 
-                      type="text" value={newDrop.requester}
-                      onChange={(e) => setNewDrop(prev => ({ ...prev, requester: e.target.value }))}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                    />
-                  </div>
                   <div className="flex gap-3 pt-2">
-                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-[#333] py-2 text-xs font-bold rounded">Cancel</button>
-                    <button type="submit" className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded">Add Drop</button>
+                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-[#333] py-2 text-xs font-bold rounded">Cancelar</button>
+                    <button type="submit" className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded">Salvar Drop</button>
                   </div>
                 </form>
               </motion.div>
@@ -1108,14 +1180,6 @@ export default function App() {
                       <option value="Active">Active</option>
                       <option value="Collapsed">Collapsed</option>
                     </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Base Coords</label>
-                    <input 
-                      type="text" value={editingPlanet.base_coords || ''}
-                      onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, base_coords: e.target.value }) : null)}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                    />
                   </div>
                   <button type="submit" className="w-full bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded mt-4">Save Changes</button>
                 </form>
