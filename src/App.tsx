@@ -937,10 +937,10 @@ export default function App() {
                           type="datetime-local" 
                           value={formatForInput(planet.respawn_time)}
                           onChange={(e) => updatePlanetField(planet.id, 'respawn_time', e.target.value)}
-                          className={`w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[9px] h-6 ${collapsed ? 'text-red-500' : ''}`}
+                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[9px] h-6 text-green-500"
                         />
                       ) : (
-                        <div className={`text-center text-[10px] ${collapsed ? 'text-red-500' : ''}`}>
+                        <div className="text-center text-[10px] text-green-500">
                           {formatForDisplay(planet.respawn_time)}
                         </div>
                       )}
