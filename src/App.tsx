@@ -496,6 +496,26 @@ export default function App() {
     }
   };
 
+  const removeUser = async (auth_id: string) => {
+    if (profile?.role !== 'admin') return;
+    
+    // Removed window.confirm as it doesn't work in iframes
+
+    // Optimistic update
+    setAllProfiles(prev => prev.filter(p => p.auth_id !== auth_id));
+
+    const { error } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('auth_id', auth_id);
+      
+    if (error) {
+      console.error("Error removing user:", error);
+      fetchAllProfiles();
+      console.error("Failed to remove user: " + error.message);
+    }
+  };
+
   const createAdminProfileManually = async () => {
     if (!user) return;
     setIsCreatingAdmin(true);
@@ -1466,14 +1486,22 @@ export default function App() {
                               {p.approved ? 'Approved' : 'Pending Approval'}
                             </div>
                           </div>
-                          {!p.approved && (
+                          <div className="flex gap-2">
+                            {!p.approved && (
+                              <button 
+                                onClick={() => approveUser(p.auth_id)}
+                                className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[10px] uppercase font-bold rounded hover:opacity-90"
+                              >
+                                Approve
+                              </button>
+                            )}
                             <button 
-                              onClick={() => approveUser(p.auth_id)}
-                              className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[10px] uppercase font-bold rounded hover:opacity-90"
+                              onClick={() => removeUser(p.auth_id)}
+                              className="bg-red-500/20 text-red-500 border border-red-500/50 px-4 py-1.5 text-[10px] uppercase font-bold rounded hover:bg-red-500 hover:text-white transition-colors"
                             >
-                              Approve
+                              Remove
                             </button>
-                          )}
+                          </div>
                         </div>
                       ))}
                       {allProfiles.filter(p => p.role !== 'admin').length === 0 && (
