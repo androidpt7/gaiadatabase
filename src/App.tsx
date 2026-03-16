@@ -52,39 +52,62 @@ const parseTechName = (techName: string) => {
     }
   }
 
+  if (item.endsWith('s')) {
+    item = item.slice(0, -1);
+  }
+
   return { system, type, item };
 };
 
 // Mapeamento de ícones
 const ITEM_ICONS: Record<string, string> = {
-  'Blasters': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/blaster.png',
-  'Collectors': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/collector.png',
-  'Repair Droids': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_droid.png',
-  'Afterburners': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/afterburner.png',
-  'Rockets': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/rockets.png',
-  'Shields': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/shield.png',
-  'Repair Targets': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_target.png',
-  'Speed Actuators': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/speed_actuator.png',
-  'Aim Computers': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aim_computer.png',
-  'Taunts': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/taunt.png',
-  'Protectors': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/protector.png',
-  'Stun Charges': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/stun_charge.png',
-  'Perforators': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/perforator.png',
-  'Aim Scramblers': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aim_scrambler.png',
-  'Repair Fields': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_field.png',
-  'Aggro Beacons': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aggro_beacon.png',
-  'Thermoblasts': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/thermoblast.png',
-  'Aggro Bombs': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aggro_bomb.png',
-  'Materializers': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/materializer.png',
-  'Stun Domes': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/stun_dome.png',
-  'Sniper Blasters': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/sniper_blaster.png',
-  'Attack Droids': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/attack_droid.png',
-  'Orbital Strikes': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/orbital.png',
-  'Attack Charges': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/attack_charge.png',
-  'Repair Turrets': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_turret.png',
-  'Attack Turrets': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/attack_turret.png',
-  'Sticky Bombs': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/sticky_bomb.png',
-  'Minelayers': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/mine.png',
+  'Blaster': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/blaster.png',
+  'Collector': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/collector.png',
+  'Repair Droid': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_droid.png',
+  'Afterburner': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/afterburner.png',
+  'Rocket': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/rockets.png',
+  'Shield': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/shield.png',
+  'Repair Target': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_target.png',
+  'Speed Actuator': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/speed_actuator.png',
+  'Aim Computer': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aim_computer.png',
+  'Taunt': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/taunt.png',
+  'Protector': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/protector.png',
+  'Stun Charge': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/stun_charge.png',
+  'Perforator': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/perforator.png',
+  'Aim Scrambler': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aim_scrambler.png',
+  'Repair Field': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_field.png',
+  'Aggro Beacon': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aggro_beacon.png',
+  'Thermoblast': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/thermoblast.png',
+  'Aggro Bomb': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/aggro_bomb.png',
+  'Materializer': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/materializer.png',
+  'Stun Dome': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/stun_dome.png',
+  'Sniper Blaster': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/sniper_blaster.png',
+  'Attack Droid': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/attack_droid.png',
+  'Orbital Strike': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/orbital.png',
+  'Attack Charge': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/attack_charge.png',
+  'Repair Turret': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/repair_turret.png',
+  'Attack Turret': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/attack_turret.png',
+  'Sticky Bomb': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/sticky_bomb.png',
+  'Minelayer': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/mine.png',
+};
+
+const getAbbreviation = (system: string, type: string) => {
+  const sysMap: Record<string, string> = {
+    'Vega': 'V', 'Antares': 'A', 'Gemini': 'G', 'Mizar': 'M', 'Sol': 'S', 'Draconis': 'D', 'Sirius': 'Si'
+  };
+  const typeMap: Record<string, string> = {
+    'Rapid': 'R', 'Long': 'L', 'Normal': '', 'Strong': 'St'
+  };
+  return `${sysMap[system] || ''} ${typeMap[type] || ''}`.trim();
+};
+
+const formatTechName = (techName: string) => {
+  const parsed = parseTechName(techName);
+  if (parsed.system) {
+    const abbr = getAbbreviation(parsed.system, parsed.type);
+    return `${abbr} ${parsed.item}`.trim();
+  }
+  return techName;
 };
 
 export default function App() {
@@ -96,7 +119,7 @@ export default function App() {
   const [drops, setDrops] = useState<Drop[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRing, setSelectedRing] = useState<number | 'all'>('all');
+  const [selectedRing, setSelectedRing] = useState<number | 'all'>(5);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddPlanetModal, setShowAddPlanetModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -108,6 +131,34 @@ export default function App() {
   const [editingPlanet, setEditingPlanet] = useState<Planet | null>(null);
   const [isSpreadsheetMode, setIsSpreadsheetMode] = useState(true);
   
+  const formatForInput = (isoString?: string) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return '';
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
+  const formatForDisplay = (isoString?: string) => {
+    if (!isoString) return '-';
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return '-';
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return (
+      <div className="flex flex-col items-center leading-tight">
+        <span>{`${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`}</span>
+        <span>{`${pad(date.getHours())}:${pad(date.getMinutes())}`}</span>
+      </div>
+    );
+  };
+
+  const isCollapsed = (collapse_time?: string) => {
+    if (!collapse_time) return false;
+    const collapseDate = new Date(collapse_time);
+    if (isNaN(collapseDate.getTime())) return false;
+    return new Date() > collapseDate;
+  };
+
   const [newDrop, setNewDrop] = useState({ 
     id: '',
     planet_id: '', 
@@ -118,16 +169,6 @@ export default function App() {
     item: '',
     type: ''
   });
-
-  const getAbbreviation = (system: string, type: string) => {
-    const sysMap: Record<string, string> = {
-      'Vega': 'V', 'Antares': 'A', 'Gemini': 'G', 'Mizar': 'M', 'Sol': 'S', 'Draconis': 'D', 'Sirius': 'Si'
-    };
-    const typeMap: Record<string, string> = {
-      'Rapid': 'R', 'Long': 'L', 'Normal': '', 'Strong': 'St'
-    };
-    return `${sysMap[system] || ''} ${typeMap[type] || ''}`.trim();
-  };
 
   const updateTechName = (system: string, type: string, item: string) => {
     const abbr = getAbbreviation(system, type);
@@ -355,7 +396,8 @@ export default function App() {
     ring: 5,
     enemy: '-',
     quarcs: '-',
-    status: 'Active' as const
+    status: 'Active' as const,
+    collapse_time: ''
   });
 
   const handleAddPlanet = async (e: React.FormEvent) => {
@@ -363,10 +405,31 @@ export default function App() {
     if (!profile || profile.role !== 'admin') return;
 
     try {
-      const { error } = await supabase.from('planets').insert([newPlanet]);
+      let respawn_time = null;
+      let collapse_time = null;
+      
+      if (newPlanet.collapse_time) {
+        const collapseDate = new Date(newPlanet.collapse_time);
+        if (!isNaN(collapseDate.getTime())) {
+          collapse_time = collapseDate.toISOString();
+          respawn_time = new Date(collapseDate.getTime() + 24 * 60 * 60 * 1000).toISOString();
+        }
+      }
+
+      const planetData = {
+        name: newPlanet.name,
+        ring: newPlanet.ring,
+        enemy: newPlanet.enemy,
+        quarcs: newPlanet.quarcs,
+        status: newPlanet.status,
+        collapse_time,
+        respawn_time
+      };
+
+      const { error } = await supabase.from('planets').insert([planetData]);
       if (error) throw error;
       setShowAddPlanetModal(false);
-      setNewPlanet({ name: '', ring: 5, enemy: '-', quarcs: '-', status: 'Active' });
+      setNewPlanet({ name: '', ring: 5, enemy: '-', quarcs: '-', status: 'Active', collapse_time: '' });
       fetchPlanets();
     } catch (err) {
       console.error("Error adding planet:", err);
@@ -496,9 +559,38 @@ export default function App() {
   };
 
   const updatePlanetField = async (planet_id: string, field: string, value: any) => {
+    let updates: any = { [field]: value };
+    
+    if (field === 'collapse_time') {
+      if (value) {
+        const collapseDate = new Date(value);
+        if (!isNaN(collapseDate.getTime())) {
+          updates.collapse_time = collapseDate.toISOString();
+          updates.respawn_time = new Date(collapseDate.getTime() + 24 * 60 * 60 * 1000).toISOString();
+        } else {
+          updates.collapse_time = null;
+          updates.respawn_time = null;
+        }
+      } else {
+        updates.collapse_time = null;
+        updates.respawn_time = null;
+      }
+    } else if (field === 'respawn_time') {
+      if (value) {
+        const respawnDate = new Date(value);
+        if (!isNaN(respawnDate.getTime())) {
+          updates.respawn_time = respawnDate.toISOString();
+        } else {
+          updates.respawn_time = null;
+        }
+      } else {
+        updates.respawn_time = null;
+      }
+    }
+
     const { error } = await supabase
       .from('planets')
-      .update({ [field]: value })
+      .update(updates)
       .eq('id', planet_id);
     if (error) console.error(error);
     else fetchPlanets();
@@ -713,6 +805,7 @@ export default function App() {
             <tbody>
               {filteredPlanets.map((planet) => {
                 const isEditing = isSpreadsheetMode && profile?.approved;
+                const collapsed = isCollapsed(planet.collapse_time);
                 
                 return (
                   <tr key={planet.id} className="hover:bg-[#333] transition-colors group">
@@ -731,20 +824,32 @@ export default function App() {
                     </td>
                     <td className="border border-[#444] p-1">
                       {isEditing ? (
-                        <input 
-                          type="text" 
-                          value={planet.name}
-                          onChange={(e) => updatePlanetField(planet.id, 'name', e.target.value)}
-                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none focus:border-[#90EE90] text-[10px]"
-                        />
+                        <div className="flex flex-col items-center justify-center gap-1">
+                          <input 
+                            type="text" 
+                            value={planet.name}
+                            onChange={(e) => updatePlanetField(planet.id, 'name', e.target.value)}
+                            className={`w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none focus:border-[#90EE90] text-[10px] text-center ${collapsed ? 'text-red-500 line-through' : ''}`}
+                          />
+                          {collapsed && (
+                            <span className="text-[9px] text-white">(To be replaced)</span>
+                          )}
+                        </div>
                       ) : (
-                        <div className="font-bold px-1 text-[10px]">{planet.name}</div>
+                        <div className="flex flex-col items-center justify-center">
+                          <div className={`font-bold px-1 text-[10px] text-center ${collapsed ? 'text-red-500 line-through' : ''}`}>
+                            {planet.name}
+                          </div>
+                          {collapsed && (
+                            <div className="text-[9px] text-white">(To be replaced)</div>
+                          )}
+                        </div>
                       )}
                     </td>
                     
                     {CATEGORIES.map(cat => {
                       const planetDrops = getDropsForPlanet(planet.id, cat);
-                      const techValue = planetDrops.map(d => d.tech_name).join('\n');
+                      const techValue = planetDrops.map(d => formatTechName(d.tech_name)).join('\n');
                       
                       return (
                         <td key={cat} className="border border-[#444] p-1 align-middle text-center">
@@ -768,12 +873,12 @@ export default function App() {
                                 return (
                                   <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate w-full flex items-center gap-1">
                                     {(() => {
-                                      const iconKey = ITEM_ICONS[parsed.item] ? parsed.item : (parsed.item.endsWith('s') ? parsed.item.slice(0, -1) : parsed.item);
+                                      const iconKey = parsed.item;
                                       return ITEM_ICONS[iconKey] ? (
                                         <img src={ITEM_ICONS[iconKey]} alt={parsed.item} className="w-3 h-3 object-contain" referrerPolicy="no-referrer" />
                                       ) : null;
                                     })()}
-                                    <span className={parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{drop.tech_name}</span>
+                                    <span className={parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
                                   </div>
                                 );
                               })}
@@ -813,36 +918,15 @@ export default function App() {
 
                     <td className="border border-[#444] p-1">
                       {isEditing ? (
-                        <div className="flex flex-col gap-0.5">
-                          <div className="flex items-center gap-1">
-                            <span className="text-[7px] opacity-50 uppercase w-6">Days</span>
-                            <input 
-                              type="number" 
-                              value={planet.collapse_days || 0}
-                              onChange={(e) => updatePlanetField(planet.id, 'collapse_days', parseInt(e.target.value) || 0)}
-                              className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded text-[9px] focus:outline-none h-4"
-                              placeholder="0"
-                            />
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-[7px] opacity-50 uppercase w-6">Hours</span>
-                            <input 
-                              type="number" 
-                              value={planet.collapse_hours || 0}
-                              onChange={(e) => updatePlanetField(planet.id, 'collapse_hours', parseInt(e.target.value) || 0)}
-                              className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded text-[9px] focus:outline-none h-4"
-                              placeholder="0"
-                            />
-                          </div>
-                        </div>
+                        <input 
+                          type="datetime-local" 
+                          value={formatForInput(planet.collapse_time)}
+                          onChange={(e) => updatePlanetField(planet.id, 'collapse_time', e.target.value)}
+                          className={`w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded text-[9px] focus:outline-none h-6 ${collapsed ? 'text-red-500' : ''}`}
+                        />
                       ) : (
-                        <div className="text-center">
-                          {planet.collapse_days || planet.collapse_hours ? (
-                            <div className="flex flex-col text-[9px]">
-                              {planet.collapse_days ? <span>{planet.collapse_days}d</span> : null}
-                              {planet.collapse_hours ? <span>{planet.collapse_hours}h</span> : null}
-                            </div>
-                          ) : '-'}
+                        <div className={`text-center text-[10px] ${collapsed ? 'text-red-500' : ''}`}>
+                          {formatForDisplay(planet.collapse_time)}
                         </div>
                       )}
                     </td>
@@ -850,13 +934,15 @@ export default function App() {
                     <td className="border border-[#444] p-1">
                       {isEditing ? (
                         <input 
-                          type="text" 
-                          value={planet.respawn_time || ''}
+                          type="datetime-local" 
+                          value={formatForInput(planet.respawn_time)}
                           onChange={(e) => updatePlanetField(planet.id, 'respawn_time', e.target.value)}
-                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
+                          className={`w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[9px] h-6 ${collapsed ? 'text-red-500' : ''}`}
                         />
                       ) : (
-                        <div className="text-center text-[10px]">{planet.respawn_time || '-'}</div>
+                        <div className={`text-center text-[10px] ${collapsed ? 'text-red-500' : ''}`}>
+                          {formatForDisplay(planet.respawn_time)}
+                        </div>
                       )}
                     </td>
 
@@ -929,15 +1015,26 @@ export default function App() {
                       </select>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Quarcs</label>
-                    <select 
-                      value={newPlanet.quarcs}
-                      onChange={(e) => setNewPlanet(prev => ({ ...prev, quarcs: e.target.value }))}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                    >
-                      {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Quarcs</label>
+                      <select 
+                        value={newPlanet.quarcs}
+                        onChange={(e) => setNewPlanet(prev => ({ ...prev, quarcs: e.target.value }))}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      >
+                        {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Collapse Time</label>
+                      <input 
+                        type="datetime-local"
+                        value={newPlanet.collapse_time}
+                        onChange={(e) => setNewPlanet(prev => ({ ...prev, collapse_time: e.target.value }))}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                      />
+                    </div>
                   </div>
                   <div className="flex gap-3 pt-2">
                     <button 
@@ -1113,7 +1210,7 @@ export default function App() {
                       >
                         {['WU', 'MU', 'SU', 'CU'].includes(newDrop.category) ? null : <option value="">-- Adicionar Novo --</option>}
                         {getDropsForPlanet(newDrop.planet_id, newDrop.category).map(d => (
-                          <option key={d.id} value={d.id}>Editar: {d.tech_name}</option>
+                          <option key={d.id} value={d.id}>Editar: {formatTechName(d.tech_name)}</option>
                         ))}
                       </select>
                     </div>
