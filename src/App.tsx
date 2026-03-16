@@ -1020,7 +1020,7 @@ export default function App() {
             <thead>
               <tr className="bg-[#5CB85C] text-[#1A1A1A] font-bold uppercase">
                 <th className="border border-[#444] p-1 w-16 rounded-tl">Ring</th>
-                <th className="border border-[#444] p-1 w-40">Name</th>
+                <th className="border border-[#444] p-1 w-40">Planet</th>
                 {CATEGORIES.map(cat => (
                   <th key={cat} className="border border-[#444] p-1 w-32 text-center">
                     <div className="flex items-center justify-center gap-1">
