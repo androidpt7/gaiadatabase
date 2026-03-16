@@ -110,6 +110,29 @@ const formatTechName = (techName: string) => {
   return techName;
 };
 
+const EditableTextarea = ({ initialValue, onSave, disabled, rows, className }: any) => {
+  const [value, setValue] = useState(initialValue);
+  
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  return (
+    <textarea
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={() => {
+        if (value !== initialValue) {
+          onSave(value);
+        }
+      }}
+      disabled={disabled}
+      rows={rows}
+      className={className}
+    />
+  );
+};
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -169,6 +192,35 @@ export default function App() {
     item: '',
     type: ''
   });
+
+  useEffect(() => {
+    if (newDrop.planet_id && newDrop.category) {
+      const existingDrops = getDropsForPlanet(newDrop.planet_id, newDrop.category);
+      const idExists = existingDrops.some(d => d.id === newDrop.id);
+      
+      if (!idExists && newDrop.id !== '') {
+        setNewDrop(prev => ({ ...prev, id: '', system: '', type: '', item: '', tech_name: '' }));
+      } else if (
+        !newDrop.id && 
+        (
+          ['WU', 'MU', 'SU', 'CU'].includes(newDrop.category) || 
+          (['Amarna', 'Soris', 'Giza'].includes(newDrop.category) && existingDrops.length >= 3)
+        ) && 
+        existingDrops.length > 0
+      ) {
+        const drop = existingDrops[0];
+        const parsed = parseTechName(drop.tech_name);
+        setNewDrop(prev => ({
+          ...prev,
+          id: drop.id,
+          system: parsed.system,
+          type: parsed.type,
+          item: parsed.item,
+          tech_name: drop.tech_name
+        }));
+      }
+    }
+  }, [newDrop.planet_id, newDrop.category, drops]);
 
   const updateTechName = (system: string, type: string, item: string) => {
     const abbr = getAbbreviation(system, type);
@@ -854,9 +906,9 @@ export default function App() {
                       return (
                         <td key={cat} className="border border-[#444] p-1 align-middle text-center">
                           {isEditing ? (
-                            <textarea 
-                              value={techValue}
-                              onChange={(e) => updateTechField(planet.id, cat, e.target.value)}
+                            <EditableTextarea 
+                              initialValue={techValue}
+                              onSave={(val: string) => updateTechField(planet.id, cat, val)}
                               disabled={['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5}
                               rows={cat === 'Amarna' || cat === 'Soris' || cat === 'Giza' ? 3 : 1}
                               className={`w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none focus:border-[#90EE90] resize-none text-[10px] leading-tight ${['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5 ? 'opacity-50 cursor-not-allowed' : ''} text-center`}
@@ -1208,7 +1260,7 @@ export default function App() {
                         }}
                         className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
                       >
-                        {['WU', 'MU', 'SU', 'CU'].includes(newDrop.category) ? null : <option value="">-- Adicionar Novo --</option>}
+                        {(['WU', 'MU', 'SU', 'CU'].includes(newDrop.category) || (['Amarna', 'Soris', 'Giza'].includes(newDrop.category) && getDropsForPlanet(newDrop.planet_id, newDrop.category).length >= 3)) ? null : <option value="">-- Adicionar Novo --</option>}
                         {getDropsForPlanet(newDrop.planet_id, newDrop.category).map(d => (
                           <option key={d.id} value={d.id}>Editar: {formatTechName(d.tech_name)}</option>
                         ))}
