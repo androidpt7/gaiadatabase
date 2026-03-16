@@ -504,10 +504,9 @@ export default function App() {
     // Optimistic update
     setAllProfiles(prev => prev.filter(p => p.auth_id !== auth_id));
 
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('auth_id', auth_id);
+    // Call the custom RPC function to delete the user from auth.users
+    // This will automatically cascade and delete the profile as well
+    const { error } = await supabase.rpc('delete_user_by_admin', { target_user_id: auth_id });
       
     if (error) {
       console.error("Error removing user:", error);
