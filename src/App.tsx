@@ -111,29 +111,6 @@ const formatTechName = (techName: string) => {
   return techName;
 };
 
-const EditableTextarea = ({ initialValue, onSave, disabled, rows, className }: any) => {
-  const [value, setValue] = useState(initialValue);
-  
-  useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
-
-  return (
-    <textarea
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onBlur={() => {
-        if (value !== initialValue) {
-          onSave(value);
-        }
-      }}
-      disabled={disabled}
-      rows={rows}
-      className={className}
-    />
-  );
-};
-
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -154,7 +131,8 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [editingPlanet, setEditingPlanet] = useState<Planet | null>(null);
-  const [isSpreadsheetMode, setIsSpreadsheetMode] = useState(true);
+  const [editingDrop, setEditingDrop] = useState<{ planetId: string, category: TechCategory, initialValue: string } | null>(null);
+  const [isSpreadsheetMode, setIsSpreadsheetMode] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestPlanetId, setRequestPlanetId] = useState('');
@@ -175,21 +153,12 @@ export default function App() {
     const date = new Date(isoString);
     if (isNaN(date.getTime())) return '-';
     
-    const edtString = date.toLocaleString("en-US", {
-      timeZone: "America/New_York",
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-    
-    const [datePart, timePart] = edtString.split(', ');
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const datePart = `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+    const timePart = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
     
     return (
       <div className="flex flex-col items-center leading-tight">
-        <span className="text-[9px] opacity-50">EDT</span>
         <span>{datePart}</span>
         <span>{timePart}</span>
       </div>
@@ -565,7 +534,8 @@ export default function App() {
     enemy: '-',
     quarcs: '-',
     status: 'Active' as const,
-    collapse_time: ''
+    collapse_time: '',
+    requester: ''
   });
 
   const handleAddPlanet = async (e: React.FormEvent) => {
@@ -591,13 +561,14 @@ export default function App() {
         quarcs: newPlanet.quarcs,
         status: newPlanet.status,
         collapse_time,
-        respawn_time
+        respawn_time,
+        requester: newPlanet.requester
       };
 
       const { error } = await supabase.from('planets').insert([planetData]);
       if (error) throw error;
       setShowAddPlanetModal(false);
-      setNewPlanet({ name: '', ring: 5, enemy: '-', quarcs: '-', status: 'Active', collapse_time: '' });
+      setNewPlanet({ name: '', ring: 5, enemy: '-', quarcs: '-', status: 'Active', collapse_time: '', requester: '' });
       fetchPlanets();
     } catch (err) {
       console.error("Error adding planet:", err);
@@ -631,40 +602,54 @@ export default function App() {
     }
   }, [newDrop.planet_id, newDrop.category, showAddModal]);
 
+  const updatePlanetEditor = async (planetId: string) => {
+    if (!user) return;
+    const currentNickname = profile?.uid || user.email;
+    if (!currentNickname) return;
+
+    // Fetch latest planet data to avoid overwriting other editors
+    const { data: planetData } = await supabase.from('planets').select('editor').eq('id', planetId).single();
+    if (!planetData) return;
+
+    let editors = planetData.editor ? planetData.editor.split(',').map((e: string) => e.trim()).filter((e: string) => e !== '' && e !== '-') : [];
+    if (!editors.includes(currentNickname)) {
+      editors.push(currentNickname);
+      const newEditorString = editors.join(', ');
+      await supabase.from('planets').update({ editor: newEditorString }).eq('id', planetId);
+      fetchPlanets();
+    }
+  };
+
   const handleAddDrop = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !newDrop.planet_id || !newDrop.tech_name || !newDrop.system || !newDrop.type || !newDrop.item) return;
 
     try {
       if (newDrop.id) {
-        // Update existing drop by deleting and inserting
-        const { data: deleteData, error: deleteError } = await supabase.from('drops').delete().eq('id', newDrop.id).select();
+        // Update existing drop
+        const { data: updateData, error: updateError } = await supabase.from('drops')
+          .update({
+            planet_id: newDrop.planet_id,
+            category: newDrop.category,
+            tech_name: newDrop.tech_name,
+            editor: profile?.uid || user.email
+          })
+          .eq('id', newDrop.id)
+          .select();
         
-        if (deleteError) {
-          console.error("Error deleting old drop: " + deleteError.message);
+        if (updateError) {
+          console.error("Error updating drop: " + updateError.message);
+          alert("Error updating drop: " + updateError.message);
           return;
         }
         
-        if (!deleteData || deleteData.length === 0) {
+        if (!updateData || updateData.length === 0) {
           console.warn("You don't have permission to edit this drop or it no longer exists.");
+          alert("You don't have permission to edit this drop. Please check your database permissions (RLS).");
           return;
         }
         
-        const oldDrop = getDropsForPlanet(newDrop.planet_id, newDrop.category).find(d => d.id === newDrop.id);
-        const createdAt = oldDrop ? oldDrop.created_at : new Date().toISOString();
-
-        const { error: insertError } = await supabase.from('drops').insert([{
-          planet_id: newDrop.planet_id,
-          category: newDrop.category,
-          tech_name: newDrop.tech_name,
-          editor: profile?.uid || user.email,
-          created_at: createdAt
-        }]);
-        
-        if (insertError) {
-          console.error("Error updating (inserting new): " + insertError.message);
-          return;
-        }
+        await updatePlanetEditor(newDrop.planet_id);
       } else {
         // Insert new drop
         const existingDrops = getDropsForPlanet(newDrop.planet_id, newDrop.category);
@@ -689,6 +674,7 @@ export default function App() {
           console.error("Error inserting: " + error.message);
           return;
         }
+        await updatePlanetEditor(newDrop.planet_id);
       }
       
       setShowAddModal(false);
@@ -714,7 +700,39 @@ export default function App() {
     
     try {
       const { id, ...data } = editingPlanet;
-      await supabase.from('planets').update(data).eq('id', id);
+      
+      let respawn_time = data.respawn_time;
+      let collapse_time = data.collapse_time;
+      
+      if (collapse_time) {
+        const collapseDate = new Date(collapse_time);
+        if (!isNaN(collapseDate.getTime())) {
+          collapse_time = collapseDate.toISOString();
+        } else {
+          collapse_time = null;
+        }
+      } else {
+        collapse_time = null;
+      }
+
+      if (respawn_time) {
+        const respawnDate = new Date(respawn_time);
+        if (!isNaN(respawnDate.getTime())) {
+          respawn_time = respawnDate.toISOString();
+        } else {
+          respawn_time = null;
+        }
+      } else {
+        respawn_time = null;
+      }
+      
+      const updateData = {
+        ...data,
+        collapse_time,
+        respawn_time
+      };
+      
+      await supabase.from('planets').update(updateData).eq('id', id);
       setEditingPlanet(null);
       fetchPlanets();
     } catch (err) {
@@ -778,8 +796,14 @@ export default function App() {
     }
 
     const techNames = value.split('\n').filter(t => t.trim() !== '');
-    await supabase.from('drops').delete().eq('planet_id', planet_id).eq('category', category);
+    const { error: deleteError } = await supabase.from('drops').delete().eq('planet_id', planet_id).eq('category', category);
     
+    if (deleteError) {
+      console.error("Error clearing old drops:", deleteError);
+      alert("Error clearing old drops. Please check your database permissions (RLS).");
+      return;
+    }
+
     if (techNames.length > 0) {
       const newDrops = techNames.map(name => ({
         planet_id,
@@ -788,8 +812,14 @@ export default function App() {
         editor: profile?.uid || user?.email,
         created_at: new Date().toISOString()
       }));
-      await supabase.from('drops').insert(newDrops);
+      const { error: insertError } = await supabase.from('drops').insert(newDrops);
+      if (insertError) {
+        console.error("Error inserting new drops:", insertError);
+        alert("Error inserting new drops. Please check your database permissions (RLS).");
+        return;
+      }
     }
+    await updatePlanetEditor(planet_id);
     fetchDrops();
   };
 
@@ -998,6 +1028,7 @@ export default function App() {
                 <th className="border border-[#444] p-1 w-24">Collapse</th>
                 <th className="border border-[#444] p-1 w-24">Respawn</th>
                 <th className="border border-[#444] p-1 w-24">Editor</th>
+                <th className="border border-[#444] p-1 w-24">Requester</th>
               </tr>
             </thead>
             <tbody>
@@ -1011,38 +1042,32 @@ export default function App() {
                       <div className="flex flex-col items-center gap-1">
                         <span className="text-xs">{planet.ring}</span>
                         {isEditing && profile?.role === 'admin' && (
-                          <button 
-                            onClick={() => handleDeletePlanet(planet.id)}
-                            className="bg-[#1A1A1A] border border-[#444] px-2 py-0.5 rounded text-[9px] hover:bg-red-900 hover:text-white transition-colors"
-                          >
-                            Delete
-                          </button>
+                          <div className="flex flex-col gap-1 w-full px-1">
+                            <button 
+                              onClick={() => setEditingPlanet(planet)}
+                              className="w-full bg-[#1A1A1A] border border-[#444] px-1 py-0.5 rounded text-[9px] hover:bg-blue-900 hover:text-white transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button 
+                              onClick={() => handleDeletePlanet(planet.id)}
+                              className="w-full bg-[#1A1A1A] border border-[#444] px-1 py-0.5 rounded text-[9px] hover:bg-red-900 hover:text-white transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         )}
                       </div>
                     </td>
                     <td className="border border-[#444] p-1">
-                      {isEditing ? (
-                        <div className="flex flex-col items-center justify-center gap-1">
-                          <input 
-                            type="text" 
-                            value={planet.name}
-                            onChange={(e) => updatePlanetField(planet.id, 'name', e.target.value)}
-                            className={`w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none focus:border-[#90EE90] text-[10px] text-center ${collapsed ? 'text-red-500 line-through' : ''}`}
-                          />
-                          {collapsed && (
-                            <span className="text-[9px] text-white">(To be replaced)</span>
-                          )}
+                      <div className="flex flex-col items-center justify-center">
+                        <div className={`font-bold px-1 text-[10px] text-center ${collapsed ? 'text-red-500 line-through' : ''}`}>
+                          {planet.name}
                         </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center">
-                          <div className={`font-bold px-1 text-[10px] text-center ${collapsed ? 'text-red-500 line-through' : ''}`}>
-                            {planet.name}
-                          </div>
-                          {collapsed && (
-                            <div className="text-[9px] text-white">(To be replaced)</div>
-                          )}
-                        </div>
-                      )}
+                        {collapsed && (
+                          <div className="text-[9px] text-white">(To be replaced)</div>
+                        )}
+                      </div>
                     </td>
                     
                     {CATEGORIES.map(cat => {
@@ -1052,18 +1077,32 @@ export default function App() {
                       return (
                         <td key={cat} className="border border-[#444] p-1 align-middle text-center">
                           {isEditing ? (
-                            <EditableTextarea 
-                              initialValue={techValue}
-                              onSave={(val: string) => updateTechField(planet.id, cat, val)}
-                              disabled={['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5}
-                              rows={cat === 'Amarna' || cat === 'Soris' || cat === 'Giza' ? 3 : 1}
-                              className={`w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none focus:border-[#90EE90] resize-none text-[10px] leading-tight ${['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5 ? 'opacity-50 cursor-not-allowed' : ''} text-center`}
-                            />
-
-
-// ... (rest of the file)
-
-
+                            <div 
+                              onClick={() => {
+                                if (['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5) return;
+                                setEditingDrop({ planetId: planet.id, category: cat, initialValue: techValue });
+                              }}
+                              className={`w-full min-h-[24px] bg-[#1A1A1A] border border-[#444] p-1 rounded cursor-pointer hover:border-[#90EE90] text-[10px] leading-tight ${['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5 ? 'opacity-50 cursor-not-allowed' : ''} text-center flex flex-col items-center justify-center gap-0.5`}
+                            >
+                              {techValue ? (
+                                planetDrops.map(drop => {
+                                  const parsed = parseTechName(drop.tech_name);
+                                  return (
+                                    <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate w-full flex items-center gap-1">
+                                      {(() => {
+                                        const iconKey = parsed.item;
+                                        return ITEM_ICONS[iconKey] ? (
+                                          <img src={ITEM_ICONS[iconKey]} alt={parsed.item} className="w-3 h-3 object-contain" referrerPolicy="no-referrer" />
+                                        ) : null;
+                                      })()}
+                                      <span className={parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
+                                    </div>
+                                  );
+                                })
+                              ) : (
+                                <span className="text-[#666] italic">Edit</span>
+                              )}
+                            </div>
                           ) : (
                             <div className="flex flex-col items-center justify-center gap-0.5 h-full">
                               {planetDrops.map(drop => {
@@ -1087,74 +1126,31 @@ export default function App() {
                     })}
 
                     <td className="border border-[#444] p-1">
-                      {isEditing ? (
-                        <select 
-                          value={planet.enemy || '-'}
-                          onChange={(e) => updatePlanetField(planet.id, 'enemy', e.target.value)}
-                          className="w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none text-[10px]"
-                        >
-                          {ENEMY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                      ) : (
-                        <div className="text-center">{planet.enemy || '-'}</div>
-                      )}
+                      <div className="text-center">{planet.enemy || '-'}</div>
                     </td>
 
                     <td className="border border-[#444] p-1">
-                      {isEditing ? (
-                        <select 
-                          value={planet.quarcs || '-'}
-                          onChange={(e) => updatePlanetField(planet.id, 'quarcs', e.target.value)}
-                          className="w-full bg-[#1A1A1A] border border-[#444] p-1 rounded focus:outline-none text-[10px]"
-                        >
-                          {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                      ) : (
-                        <div className="text-center">{planet.quarcs || '-'}</div>
-                      )}
+                      <div className="text-center">{planet.quarcs || '-'}</div>
                     </td>
 
                     <td className="border border-[#444] p-1">
-                      {isEditing ? (
-                        <input 
-                          type="datetime-local" 
-                          value={formatForInput(planet.collapse_time)}
-                          onChange={(e) => updatePlanetField(planet.id, 'collapse_time', e.target.value)}
-                          className={`w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded text-[9px] focus:outline-none h-6 ${collapsed ? 'text-red-500' : ''}`}
-                        />
-                      ) : (
-                        <div className={`text-center text-[10px] ${collapsed ? 'text-red-500' : ''}`}>
-                          {formatForDisplay(planet.collapse_time)}
-                        </div>
-                      )}
+                      <div className={`text-center text-[10px] ${collapsed ? 'text-red-500' : ''}`}>
+                        {formatForDisplay(planet.collapse_time)}
+                      </div>
                     </td>
 
                     <td className="border border-[#444] p-1">
-                      {isEditing ? (
-                        <input 
-                          type="datetime-local" 
-                          value={formatForInput(planet.respawn_time)}
-                          onChange={(e) => updatePlanetField(planet.id, 'respawn_time', e.target.value)}
-                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[9px] h-6 text-green-500"
-                        />
-                      ) : (
-                        <div className="text-center text-[10px] text-green-500">
-                          {formatForDisplay(planet.respawn_time)}
-                        </div>
-                      )}
+                      <div className="text-center text-[10px] text-green-500">
+                        {formatForDisplay(planet.respawn_time)}
+                      </div>
                     </td>
 
                     <td className="border border-[#444] p-1">
-                      {isEditing ? (
-                        <input 
-                          type="text" 
-                          value={planet.editor || ''}
-                          onChange={(e) => updatePlanetField(planet.id, 'editor', e.target.value)}
-                          className="w-full bg-[#1A1A1A] border border-[#444] p-0.5 rounded focus:outline-none text-[10px]"
-                        />
-                      ) : (
-                        <div className="text-center text-[10px]">{planet.editor || '-'}</div>
-                      )}
+                      <div className="text-center text-[10px]">{planet.editor || '-'}</div>
+                    </td>
+
+                    <td className="border border-[#444] p-1">
+                      <div className="text-center text-[10px]">{planet.requester || '-'}</div>
                     </td>
                   </tr>
                 );
@@ -1166,6 +1162,63 @@ export default function App() {
 
       {/* Modals */}
         <AnimatePresence>
+          {editingDrop && (
+            <motion.div 
+              key="edit-drop-modal"
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setEditingDrop(null)} />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} 
+                animate={{ scale: 1, opacity: 1 }} 
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="relative w-full max-w-sm bg-[#1A1A1A] border border-[#333] p-6 rounded-lg shadow-2xl"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-bold uppercase tracking-tight">Edit {editingDrop.category}</h2>
+                  <button onClick={() => setEditingDrop(null)}><X size={18} /></button>
+                </div>
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    updateTechField(editingDrop.planetId, editingDrop.category, editingDrop.initialValue);
+                    setEditingDrop(null);
+                  }} 
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="text-[10px] uppercase opacity-50 block mb-1">Technologies (one per line)</label>
+                    <textarea 
+                      value={editingDrop.initialValue}
+                      onChange={(e) => setEditingDrop(prev => prev ? ({ ...prev, initialValue: e.target.value }) : null)}
+                      rows={['Amarna', 'Soris', 'Giza'].includes(editingDrop.category) ? 3 : 2}
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90] resize-none"
+                      placeholder="e.g. WU 1&#10;WU 2"
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      type="button" 
+                      onClick={() => setEditingDrop(null)}
+                      className="flex-1 bg-[#333] text-white py-2 text-xs font-bold rounded uppercase"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded uppercase"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+
           {showAddPlanetModal && (
             <motion.div 
               key="add-planet-modal"
@@ -1183,13 +1236,24 @@ export default function App() {
               >
                 <h2 className="text-lg font-bold mb-4 uppercase tracking-tight">Add New Planet</h2>
                 <form onSubmit={handleAddPlanet} className="space-y-4">
-                  <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Planet Name</label>
-                    <input 
-                      type="text" required value={newPlanet.name}
-                      onChange={(e) => setNewPlanet(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Planet Name</label>
+                      <input 
+                        type="text" required value={newPlanet.name}
+                        onChange={(e) => setNewPlanet(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Requester</label>
+                      <input 
+                        type="text" value={newPlanet.requester}
+                        onChange={(e) => setNewPlanet(prev => ({ ...prev, requester: e.target.value }))}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                        placeholder="Optional"
+                      />
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -1611,34 +1675,116 @@ export default function App() {
                 <form onSubmit={handleUpdatePlanet} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Enemy</label>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Planet Name</label>
                       <input 
-                        type="text" value={editingPlanet.enemy || ''}
-                        onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, enemy: e.target.value }) : null)}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                        type="text" required value={editingPlanet.name}
+                        onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Quarcs</label>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Requester</label>
                       <input 
-                        type="text" value={editingPlanet.quarcs || ''}
-                        onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, quarcs: e.target.value }) : null)}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                        type="text" value={editingPlanet.requester || ''}
+                        onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, requester: e.target.value }) : null)}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                        placeholder="Optional"
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Status</label>
-                    <select 
-                      value={editingPlanet.status}
-                      onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, status: e.target.value as any }) : null)}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Collapsed">Collapsed</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Ring</label>
+                      <select 
+                        value={editingPlanet.ring}
+                        onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, ring: Number(e.target.value) }) : null)}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      >
+                        {[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>Ring {r}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Status</label>
+                      <select 
+                        value={editingPlanet.status}
+                        onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, status: e.target.value as any }) : null)}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Collapsed">Collapsed</option>
+                      </select>
+                    </div>
                   </div>
-                  <button type="submit" className="w-full bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded mt-4">Save Changes</button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Enemy</label>
+                      <select 
+                        value={editingPlanet.enemy || '-'}
+                        onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, enemy: e.target.value }) : null)}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      >
+                        {ENEMY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Quarcs</label>
+                      <select 
+                        value={editingPlanet.quarcs || '-'}
+                        onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, quarcs: e.target.value }) : null)}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      >
+                        {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Collapse Time</label>
+                      <input 
+                        type="datetime-local"
+                        value={formatForInput(editingPlanet.collapse_time)}
+                        onChange={(e) => {
+                          const newCollapse = e.target.value;
+                          setEditingPlanet(prev => {
+                            if (!prev) return null;
+                            let newRespawn = prev.respawn_time;
+                            if (newCollapse) {
+                              const collapseDate = new Date(newCollapse);
+                              if (!isNaN(collapseDate.getTime())) {
+                                newRespawn = new Date(collapseDate.getTime() + 24 * 60 * 60 * 1000).toISOString();
+                              }
+                            }
+                            return { ...prev, collapse_time: newCollapse, respawn_time: newRespawn };
+                          });
+                        }}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase opacity-50 block mb-1">Respawn Time</label>
+                      <input 
+                        type="datetime-local"
+                        value={formatForInput(editingPlanet.respawn_time)}
+                        onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, respawn_time: e.target.value }) : null)}
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      type="button" 
+                      onClick={() => setEditingPlanet(null)}
+                      className="flex-1 bg-[#333] text-white py-2 text-xs font-bold rounded uppercase"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded uppercase"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
                 </form>
               </motion.div>
             </motion.div>
