@@ -91,6 +91,7 @@ const ITEM_ICONS: Record<string, string> = {
   'Attack Turret': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/attack_turret.png',
   'Sticky Bomb': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/sticky_bomb.png',
   'Minelayer': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/mine.png',
+  'Color Pattern': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/pattern.png',
 };
 
 const getAbbreviation = (system: string, type: string) => {
