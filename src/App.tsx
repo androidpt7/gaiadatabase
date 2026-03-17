@@ -31,7 +31,7 @@ const parseTechName = (techName: string) => {
   if (!techName) return { system: '', type: 'Normal', item: '' };
 
   const sysMapRev: Record<string, string> = {
-    'V': 'Vega', 'A': 'Antares', 'G': 'Gemini', 'M': 'Mizar', 'S': 'Sol', 'D': 'Draconis', 'Si': 'Sirius'
+    'V': 'Vega', 'A': 'Antares', 'G': 'Gemini', 'M': 'Mizar', 'So': 'Sol', 'D': 'Draconis', 'Si': 'Sirius'
   };
   const typeMapRev: Record<string, string> = {
     'R': 'Rapid', 'L': 'Long', 'St': 'Strong'
@@ -96,7 +96,7 @@ const ITEM_ICONS: Record<string, string> = {
 
 const getAbbreviation = (system: string, type: string) => {
   const sysMap: Record<string, string> = {
-    'Vega': 'V', 'Antares': 'A', 'Gemini': 'G', 'Mizar': 'M', 'Sol': 'S', 'Draconis': 'D', 'Sirius': 'Si'
+    'Vega': 'V', 'Antares': 'A', 'Gemini': 'G', 'Mizar': 'M', 'Sol': 'So', 'Draconis': 'D', 'Sirius': 'Si'
   };
   const typeMap: Record<string, string> = {
     'Rapid': 'R', 'Long': 'L', 'Normal': '', 'Strong': 'St'
@@ -671,6 +671,7 @@ export default function App() {
         }
         
         await updatePlanetEditor(newDrop.planet_id);
+        await fetchDrops();
       } else {
         // Insert new drop
         const existingDrops = getDropsForPlanet(newDrop.planet_id, newDrop.category);
@@ -696,6 +697,7 @@ export default function App() {
           return;
         }
         await updatePlanetEditor(newDrop.planet_id);
+        await fetchDrops();
       }
       
       setShowAddModal(false);
