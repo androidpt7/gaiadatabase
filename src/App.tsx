@@ -797,8 +797,12 @@ export default function App() {
       .from('planets')
       .update(updates)
       .eq('id', planet_id);
-    if (error) console.error(error);
-    else fetchPlanets();
+    if (error) {
+      console.error(error);
+    } else {
+      await updatePlanetEditor(planet_id);
+      fetchPlanets();
+    }
   };
 
   const updateTechField = async (planet_id: string, category: TechCategory, value: string) => {
@@ -1204,7 +1208,17 @@ export default function App() {
                     </td>
 
                     <td className="border border-[#444] p-1">
-                      <div className="text-center">{planet.quarcs || '-'}</div>
+                      {profile?.approved ? (
+                        <select
+                          value={planet.quarcs || '-'}
+                          onChange={(e) => updatePlanetField(planet.id, 'quarcs', e.target.value)}
+                          className="w-full bg-transparent text-center focus:outline-none focus:bg-[#2A2A2A] rounded cursor-pointer text-[10px]"
+                        >
+                          {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                      ) : (
+                        <div className="text-center">{planet.quarcs || '-'}</div>
+                      )}
                     </td>
 
                     <td className="border border-[#444] p-1">
