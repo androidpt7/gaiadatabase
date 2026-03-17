@@ -1258,7 +1258,23 @@ export default function App() {
                     </td>
 
                     <td className="border border-[#444] p-1">
-                      <div className="text-center text-[13px]">{planet.requester || '-'}</div>
+                      <input
+                          key={planet.requester || 'empty'}
+                          type="text"
+                          defaultValue={planet.requester || ''}
+                          onBlur={(e) => {
+                            if (e.target.value !== (planet.requester || '')) {
+                              updatePlanetField(planet.id, 'requester', e.target.value);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          className="w-full bg-transparent text-center focus:outline-none focus:bg-[#2A2A2A] rounded text-[13px]"
+                          placeholder="-"
+                        />
                     </td>
                   </tr>
                 );
