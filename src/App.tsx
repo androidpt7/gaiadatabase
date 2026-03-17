@@ -912,7 +912,7 @@ export default function App() {
       <div className="min-h-screen bg-[#2A2A2A] flex items-center justify-center font-mono text-white">
         <div className="flex flex-col items-center gap-4">
           <Database className="animate-pulse w-12 h-12 text-[#90EE90]" />
-          <p className="text-xs uppercase tracking-widest">Loading Gaia Database...</p>
+          <p className="text-sm uppercase tracking-widest">Loading Gaia Database...</p>
         </div>
       </div>
     );
@@ -926,10 +926,10 @@ export default function App() {
           <div className="text-2xl font-bold tracking-tighter uppercase">Gaia</div>
           <div className="h-6 w-[1px] bg-[#333]" />
           <div className="flex flex-col">
-            <div className="text-[10px] font-mono opacity-50 uppercase tracking-widest">Sirius Tracker</div>
+            <div className="text-[13px] font-mono opacity-50 uppercase tracking-widest">Sirius Tracker</div>
             <div className="flex items-center gap-2">
-              <span className="text-[8px] font-mono opacity-30 uppercase">EDT:</span>
-              <span className="text-[10px] font-mono font-bold text-[#90EE90]">{getEdtString(currentTime)}</span>
+              <span className="text-[11px] font-mono opacity-30 uppercase">EDT:</span>
+              <span className="text-[13px] font-mono font-bold text-[#90EE90]">{getEdtString(currentTime)}</span>
             </div>
           </div>
         </div>
@@ -941,21 +941,21 @@ export default function App() {
                 <button 
                   onClick={createAdminProfileManually}
                   disabled={isCreatingAdmin}
-                  className="bg-red-600 text-white px-4 py-2 text-[11px] uppercase font-black animate-bounce rounded shadow-lg border-2 border-white z-50"
+                  className="bg-red-600 text-white px-4 py-2 text-sm uppercase font-black animate-bounce rounded shadow-lg border-2 border-white z-50"
                 >
                   {isCreatingAdmin ? 'Creating...' : '⚠️ CLICK HERE TO FIX ADMIN PROFILE'}
                 </button>
               )}
               <div className="flex flex-col items-end">
-                <span className="text-[10px] font-mono opacity-50 uppercase">{profile?.uid || 'GUEST'}</span>
+                <span className="text-[13px] font-mono opacity-50 uppercase">{profile?.uid || 'GUEST'}</span>
                 {profile && !profile.approved && (
-                  <span className="text-[8px] text-yellow-500 font-bold uppercase animate-pulse">Pending Approval</span>
+                  <span className="text-[11px] text-yellow-500 font-bold uppercase animate-pulse">Pending Approval</span>
                 )}
               </div>
               {profile?.role === 'admin' && (
                 <button 
                   onClick={() => setShowAdminModal(true)}
-                  className="bg-[#444] hover:bg-[#555] px-3 py-1.5 text-[10px] uppercase font-bold transition-colors rounded flex items-center gap-2"
+                  className="bg-[#444] hover:bg-[#555] px-3 py-1.5 text-[13px] uppercase font-bold transition-colors rounded flex items-center gap-2"
                 >
                   Admin
                   {allProfiles.filter(p => !p.approved).length > 0 && (
@@ -965,7 +965,7 @@ export default function App() {
               )}
               <button 
                 onClick={handleLogout}
-                className="bg-[#333] hover:bg-[#444] px-3 py-1.5 text-[10px] uppercase font-bold transition-colors rounded"
+                className="bg-[#333] hover:bg-[#444] px-3 py-1.5 text-[13px] uppercase font-bold transition-colors rounded"
               >
                 Sign Out
               </button>
@@ -973,14 +973,14 @@ export default function App() {
           ) : (
             <button 
               onClick={handleLogin}
-              className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[10px] uppercase font-bold hover:opacity-90 transition-opacity rounded"
+              className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[13px] uppercase font-bold hover:opacity-90 transition-opacity rounded"
             >
               Editor Login
             </button>
           )}
           <button 
             onClick={() => setShowRequestModal(true)}
-            className="bg-[#333] hover:bg-[#444] px-4 py-1.5 text-[10px] uppercase font-bold transition-colors rounded flex items-center gap-2"
+            className="bg-[#333] hover:bg-[#444] px-4 py-1.5 text-[13px] uppercase font-bold transition-colors rounded flex items-center gap-2"
           >
             <MessageSquare size={12} />
             Request
@@ -994,7 +994,7 @@ export default function App() {
           <div className="bg-[#90EE90]/10 p-1.5 rounded">
             <Database size={14} className="text-[#90EE90]" />
           </div>
-          <p className="text-[10px] md:text-[11px] leading-relaxed opacity-70 italic">
+          <p className="text-[13px] md:text-sm leading-relaxed opacity-70 italic">
             <span className="font-bold text-[#90EE90] not-italic mr-1">Community Notice:</span>
             We kindly ask all members to maintain a spirit of cordiality and responsibility. 
             The integrity of this database depends on accurate information and mutual respect. 
@@ -1013,14 +1013,14 @@ export default function App() {
               placeholder="Filter planets..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#333] pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-[#90EE90] rounded"
+              className="w-full bg-[#1A1A1A] border border-[#333] pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-[#90EE90] rounded"
             />
           </div>
 
           <select 
             value={selectedRing}
             onChange={(e) => setSelectedRing(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-            className="bg-[#1A1A1A] border border-[#333] px-4 py-2 text-xs focus:outline-none rounded cursor-pointer"
+            className="bg-[#1A1A1A] border border-[#333] px-4 py-2 text-sm focus:outline-none rounded cursor-pointer"
           >
             <option value="all">All Rings</option>
             {[5, 4, 3, 2, 1].map(r => (
@@ -1032,14 +1032,14 @@ export default function App() {
             <div className="flex items-center gap-2 ml-auto">
               <button 
                 onClick={() => setIsSpreadsheetMode(!isSpreadsheetMode)}
-                className={`px-4 py-2 text-xs font-bold rounded transition-colors ${isSpreadsheetMode ? 'bg-[#90EE90] text-[#2A2A2A]' : 'bg-[#333] text-white'}`}
+                className={`px-4 py-2 text-sm font-bold rounded transition-colors ${isSpreadsheetMode ? 'bg-[#90EE90] text-[#2A2A2A]' : 'bg-[#333] text-white'}`}
               >
                 {isSpreadsheetMode ? 'View Mode' : 'Edit Mode'}
               </button>
               {profile?.role === 'admin' && (
                 <button 
                   onClick={() => setShowAddPlanetModal(true)}
-                  className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-xs font-bold rounded hover:opacity-90"
+                  className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-sm font-bold rounded hover:opacity-90"
                 >
                   <Plus size={14} />
                   Add Planet
@@ -1047,7 +1047,7 @@ export default function App() {
               )}
               <button 
                 onClick={() => setShowAddModal(true)}
-                className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-xs font-bold rounded hover:opacity-90"
+                className="bg-[#90EE90] text-[#2A2A2A] flex items-center gap-2 px-4 py-2 text-sm font-bold rounded hover:opacity-90"
               >
                 <Edit2 size={14} />
                 Edit Drop
@@ -1056,13 +1056,13 @@ export default function App() {
           )}
 
           {profile?.role === 'admin' && planets.length === 0 && (
-            <button onClick={seedInitialData} className="text-[10px] opacity-30 hover:opacity-100">Seed Data</button>
+            <button onClick={seedInitialData} className="text-[13px] opacity-30 hover:opacity-100">Seed Data</button>
           )}
         </div>
 
         {/* Database Table */}
         <div className="bg-[#2A2A2A] rounded overflow-visible border border-[#333]">
-          <table className="w-full border-collapse text-[11px] min-w-[1400px]">
+          <table className="w-full border-collapse text-sm min-w-[1400px]">
             <thead>
               <tr className="bg-[#5CB85C] text-[#1A1A1A] font-bold uppercase">
                 <th className="border border-[#444] p-1 w-16 rounded-tl">Ring</th>
@@ -1073,7 +1073,7 @@ export default function App() {
                       {cat}
                       <div className="relative flex items-center group/tooltip">
                         <HelpCircle className="w-2.5 h-2.5 text-[#1A1A1A] opacity-50 hover:opacity-100 cursor-help" />
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 hidden group-hover/tooltip:block w-max min-w-[140px] bg-[#1A1A1A] text-white border border-[#444] rounded shadow-2xl p-2 text-left z-50 text-[9px] font-normal normal-case">
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 hidden group-hover/tooltip:block w-max min-w-[140px] bg-[#1A1A1A] text-white border border-[#444] rounded shadow-2xl p-2 text-left z-50 text-xs font-normal normal-case">
                           <div className="space-y-1.5">
                             <div className="flex items-center justify-between gap-3">
                               <span className="font-bold text-[#90EE90]">PT:</span>
@@ -1138,18 +1138,18 @@ export default function App() {
                   <tr key={planet.id} className="hover:bg-[#333] transition-colors group">
                     <td className="border border-[#444] p-1 text-center font-mono">
                       <div className="flex flex-col items-center gap-1">
-                        <span className="text-xs">{planet.ring}</span>
+                        <span className="text-[13px]">{planet.ring}</span>
                         {isEditing && profile?.role === 'admin' && (
                           <div className="flex flex-col gap-1 w-full px-1">
                             <button 
                               onClick={() => setEditingPlanet(planet)}
-                              className="w-full bg-[#1A1A1A] border border-[#444] px-1 py-0.5 rounded text-[9px] hover:bg-blue-900 hover:text-white transition-colors"
+                              className="w-full bg-[#1A1A1A] border border-[#444] px-1 py-0.5 rounded text-xs hover:bg-blue-900 hover:text-white transition-colors"
                             >
                               Edit
                             </button>
                             <button 
                               onClick={() => handleDeletePlanet(planet.id)}
-                              className="w-full bg-[#1A1A1A] border border-[#444] px-1 py-0.5 rounded text-[9px] hover:bg-red-900 hover:text-white transition-colors"
+                              className="w-full bg-[#1A1A1A] border border-[#444] px-1 py-0.5 rounded text-xs hover:bg-red-900 hover:text-white transition-colors"
                             >
                               Delete
                             </button>
@@ -1159,11 +1159,11 @@ export default function App() {
                     </td>
                     <td className="border border-[#444] p-1">
                       <div className="flex flex-col items-center justify-center">
-                        <div className={`font-bold px-1 text-[10px] text-center ${collapsed ? 'text-red-500 line-through' : ''}`}>
+                        <div className={`font-bold px-1 text-[13px] text-center ${collapsed ? 'text-red-500 line-through' : ''}`}>
                           {planet.name}
                         </div>
                         {collapsed && (
-                          <div className="text-[9px] text-white">(To be replaced)</div>
+                          <div className="text-xs text-white">(To be replaced)</div>
                         )}
                       </div>
                     </td>
@@ -1180,13 +1180,13 @@ export default function App() {
                                 if (['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5) return;
                                 setEditingDrop({ planetId: planet.id, category: cat, initialValue: techValue });
                               }}
-                              className={`w-full min-h-[24px] bg-[#1A1A1A] border border-[#444] p-1 rounded cursor-pointer hover:border-[#90EE90] text-[10px] leading-tight ${['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5 ? 'opacity-50 cursor-not-allowed' : ''} text-center flex flex-col items-center justify-center gap-0.5`}
+                              className={`w-full min-h-[24px] bg-[#1A1A1A] border border-[#444] p-1 rounded cursor-pointer hover:border-[#90EE90] text-[13px] leading-tight ${['Amarna', 'Soris', 'Giza'].includes(cat) && planet.ring !== 5 ? 'opacity-50 cursor-not-allowed' : ''} text-center flex flex-col items-center justify-center gap-0.5`}
                             >
                               {techValue ? (
                                 planetDrops.map(drop => {
                                   const parsed = parseTechName(drop.tech_name);
                                   return (
-                                    <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate w-full flex items-center gap-1">
+                                    <div key={drop.id} className="bg-[#333] px-1 rounded text-xs truncate w-full flex items-center gap-1">
                                       {(() => {
                                         const iconKey = parsed.item;
                                         return ITEM_ICONS[iconKey] ? (
@@ -1206,7 +1206,7 @@ export default function App() {
                               {planetDrops.map(drop => {
                                 const parsed = parseTechName(drop.tech_name);
                                 return (
-                                  <div key={drop.id} className="bg-[#333] px-1 rounded text-[9px] truncate w-full flex items-center gap-1">
+                                  <div key={drop.id} className="bg-[#333] px-1 rounded text-xs truncate w-full flex items-center gap-1">
                                     {(() => {
                                       const iconKey = parsed.item;
                                       return ITEM_ICONS[iconKey] ? (
@@ -1232,7 +1232,7 @@ export default function App() {
                         <select
                           value={planet.quarcs || '-'}
                           onChange={(e) => updatePlanetField(planet.id, 'quarcs', e.target.value)}
-                          className="w-full bg-transparent text-center focus:outline-none focus:bg-[#2A2A2A] rounded cursor-pointer text-[10px]"
+                          className="w-full bg-transparent text-center focus:outline-none focus:bg-[#2A2A2A] rounded cursor-pointer text-[13px]"
                         >
                           {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
@@ -1242,23 +1242,23 @@ export default function App() {
                     </td>
 
                     <td className="border border-[#444] p-1">
-                      <div className={`text-center text-[10px] ${collapsed ? 'text-red-500' : ''}`}>
+                      <div className={`text-center text-[13px] ${collapsed ? 'text-red-500' : ''}`}>
                         {formatForDisplay(planet.collapse_time)}
                       </div>
                     </td>
 
                     <td className="border border-[#444] p-1">
-                      <div className="text-center text-[10px] text-green-500">
+                      <div className="text-center text-[13px] text-green-500">
                         {formatForDisplay(planet.respawn_time)}
                       </div>
                     </td>
 
                     <td className="border border-[#444] p-1">
-                      <div className="text-center text-[10px]">{planet.editor || '-'}</div>
+                      <div className="text-center text-[13px]">{planet.editor || '-'}</div>
                     </td>
 
                     <td className="border border-[#444] p-1">
-                      <div className="text-center text-[10px]">{planet.requester || '-'}</div>
+                      <div className="text-center text-[13px]">{planet.requester || '-'}</div>
                     </td>
                   </tr>
                 );
@@ -1298,12 +1298,12 @@ export default function App() {
                   className="space-y-4"
                 >
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Technologies (one per line)</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">Technologies (one per line)</label>
                     <textarea 
                       value={editingDrop.initialValue}
                       onChange={(e) => setEditingDrop(prev => prev ? ({ ...prev, initialValue: e.target.value }) : null)}
                       rows={['Amarna', 'Soris', 'Giza'].includes(editingDrop.category) ? 3 : 2}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90] resize-none"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90] resize-none"
                       placeholder="e.g. WU 1&#10;WU 2"
                     />
                   </div>
@@ -1311,13 +1311,13 @@ export default function App() {
                     <button 
                       type="button" 
                       onClick={() => setEditingDrop(null)}
-                      className="flex-1 bg-[#333] text-white py-2 text-xs font-bold rounded uppercase"
+                      className="flex-1 bg-[#333] text-white py-2 text-sm font-bold rounded uppercase"
                     >
                       Cancel
                     </button>
                     <button 
                       type="submit" 
-                      className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded uppercase"
+                      className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-sm font-bold rounded uppercase"
                     >
                       Save Changes
                     </button>
@@ -1346,40 +1346,40 @@ export default function App() {
                 <form onSubmit={handleAddPlanet} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Planet Name</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Planet Name</label>
                       <input 
                         type="text" required value={newPlanet.name}
                         onChange={(e) => setNewPlanet(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90]"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Requester</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Requester</label>
                       <input 
                         type="text" value={newPlanet.requester}
                         onChange={(e) => setNewPlanet(prev => ({ ...prev, requester: e.target.value }))}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90]"
                         placeholder="Optional"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Ring</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Ring</label>
                       <select 
                         value={newPlanet.ring}
                         onChange={(e) => setNewPlanet(prev => ({ ...prev, ring: Number(e.target.value) }))}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                       >
                         {[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>Ring {r}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Enemy</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Enemy</label>
                       <select 
                         value={newPlanet.enemy}
                         onChange={(e) => setNewPlanet(prev => ({ ...prev, enemy: e.target.value }))}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                       >
                         {ENEMY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
@@ -1387,22 +1387,22 @@ export default function App() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Quarcs</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Quarcs</label>
                       <select 
                         value={newPlanet.quarcs}
                         onChange={(e) => setNewPlanet(prev => ({ ...prev, quarcs: e.target.value }))}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                       >
                         {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Collapse Time</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Collapse Time</label>
                       <input 
                         type="datetime-local"
                         value={newPlanet.collapse_time}
                         onChange={(e) => setNewPlanet(prev => ({ ...prev, collapse_time: e.target.value }))}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90]"
                       />
                     </div>
                   </div>
@@ -1410,13 +1410,13 @@ export default function App() {
                     <button 
                       type="button" 
                       onClick={() => setShowAddPlanetModal(false)}
-                      className="flex-1 bg-[#333] text-white py-2 text-xs font-bold rounded uppercase"
+                      className="flex-1 bg-[#333] text-white py-2 text-sm font-bold rounded uppercase"
                     >
                       Cancel
                     </button>
                     <button 
                       type="submit" 
-                      className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded uppercase"
+                      className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-sm font-bold rounded uppercase"
                     >
                       Add Planet
                     </button>
@@ -1442,30 +1442,30 @@ export default function App() {
                 </h2>
                 <form onSubmit={handleEmailAuth} className="space-y-4">
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Nickname</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">Nickname</label>
                     <input 
                       type="text" required value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-3 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-3 text-sm rounded focus:outline-none focus:border-[#90EE90]"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Password</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">Password</label>
                     <input 
                       type="password" required value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-3 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-3 text-sm rounded focus:outline-none focus:border-[#90EE90]"
                     />
                   </div>
-                  {authError && <p className="text-red-400 text-[10px] uppercase font-bold">{authError}</p>}
-                  <button type="submit" className="w-full bg-[#90EE90] text-[#2A2A2A] py-3 text-xs font-bold rounded uppercase tracking-widest">
+                  {authError && <p className="text-red-400 text-sm uppercase font-bold">{authError}</p>}
+                  <button type="submit" className="w-full bg-[#90EE90] text-[#2A2A2A] py-3 text-sm font-bold rounded uppercase tracking-widest">
                     {authMode === 'login' ? 'Login' : 'Sign Up'}
                   </button>
                 </form>
                 <div className="mt-6 text-center">
                   <button 
                     onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-                    className="text-[10px] uppercase opacity-50 hover:opacity-100 transition-opacity"
+                    className="text-sm uppercase opacity-50 hover:opacity-100 transition-opacity"
                   >
                     {authMode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Login"}
                   </button>
@@ -1493,17 +1493,17 @@ export default function App() {
                 <div className="flex gap-4 mb-6 border-b border-[#333]">
                   <button 
                     onClick={() => setAdminTab('users')}
-                    className={`pb-2 text-xs font-bold uppercase tracking-wider transition-colors ${adminTab === 'users' ? 'text-[#90EE90] border-b-2 border-[#90EE90]' : 'opacity-50 hover:opacity-100'}`}
+                    className={`pb-2 text-sm font-bold uppercase tracking-wider transition-colors ${adminTab === 'users' ? 'text-[#90EE90] border-b-2 border-[#90EE90]' : 'opacity-50 hover:opacity-100'}`}
                   >
                     Users
                   </button>
                   <button 
                     onClick={() => setAdminTab('messages')}
-                    className={`pb-2 text-xs font-bold uppercase tracking-wider transition-colors ${adminTab === 'messages' ? 'text-[#90EE90] border-b-2 border-[#90EE90]' : 'opacity-50 hover:opacity-100'}`}
+                    className={`pb-2 text-sm font-bold uppercase tracking-wider transition-colors ${adminTab === 'messages' ? 'text-[#90EE90] border-b-2 border-[#90EE90]' : 'opacity-50 hover:opacity-100'}`}
                   >
                     Messages
                     {messages.filter(m => m.status === 'pending').length > 0 && (
-                      <span className="ml-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full">
+                      <span className="ml-2 bg-red-500 text-white text-[11px] px-1.5 py-0.5 rounded-full">
                         {messages.filter(m => m.status === 'pending').length}
                       </span>
                     )}
@@ -1516,8 +1516,8 @@ export default function App() {
                       {allProfiles.filter(p => p.role !== 'admin').map(p => (
                         <div key={p.auth_id} className="bg-[#2A2A2A] p-4 rounded border border-[#333] flex items-center justify-center gap-4">
                           <div className="flex-1">
-                            <div className="text-xs font-bold">{p.uid}</div>
-                            <div className={`text-[9px] uppercase font-bold ${p.approved ? 'text-[#90EE90]' : 'text-yellow-500'}`}>
+                            <div className="text-sm font-bold">{p.uid}</div>
+                            <div className={`text-xs uppercase font-bold ${p.approved ? 'text-[#90EE90]' : 'text-yellow-500'}`}>
                               {p.approved ? 'Approved' : 'Pending Approval'}
                             </div>
                           </div>
@@ -1525,14 +1525,14 @@ export default function App() {
                             {!p.approved && (
                               <button 
                                 onClick={() => approveUser(p.auth_id)}
-                                className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[10px] uppercase font-bold rounded hover:opacity-90"
+                                className="bg-[#90EE90] text-[#2A2A2A] px-4 py-1.5 text-[13px] uppercase font-bold rounded hover:opacity-90"
                               >
                                 Approve
                               </button>
                             )}
                             <button 
                               onClick={() => removeUser(p.auth_id)}
-                              className="bg-red-500/20 text-red-500 border border-red-500/50 px-4 py-1.5 text-[10px] uppercase font-bold rounded hover:bg-red-500 hover:text-white transition-colors"
+                              className="bg-red-500/20 text-red-500 border border-red-500/50 px-4 py-1.5 text-[13px] uppercase font-bold rounded hover:bg-red-500 hover:text-white transition-colors"
                             >
                               Remove
                             </button>
@@ -1540,7 +1540,7 @@ export default function App() {
                         </div>
                       ))}
                       {allProfiles.filter(p => p.role !== 'admin').length === 0 && (
-                        <p className="text-center text-xs opacity-50 py-8">No users found.</p>
+                        <p className="text-center text-sm opacity-50 py-8">No users found.</p>
                       )}
                     </>
                   ) : (
@@ -1550,28 +1550,28 @@ export default function App() {
                         return (
                           <div key={m.id} className={`bg-[#2A2A2A] p-4 rounded border border-[#333] space-y-2 ${m.status === 'pending' ? 'border-l-4 border-l-[#90EE90]' : ''}`}>
                             <div className="flex justify-between items-start">
-                              <div className="text-[10px] font-bold uppercase text-[#90EE90]">
+                              <div className="text-[13px] font-bold uppercase text-[#90EE90]">
                                 Planet: {planet?.name || 'Unknown'}
                               </div>
-                              <div className="text-[8px] opacity-50">
+                              <div className="text-[11px] opacity-50">
                                 {new Date(m.created_at).toLocaleString()}
                               </div>
                             </div>
-                            <p className="text-xs italic opacity-80">"{m.content}"</p>
+                            <p className="text-sm italic opacity-80">"{m.content}"</p>
                             <div className="flex justify-between items-center pt-2">
-                              <div className="text-[9px] opacity-50 uppercase">From: {m.sender_name}</div>
+                              <div className="text-xs opacity-50 uppercase">From: {m.sender_name}</div>
                               <div className="flex gap-2">
                                 {m.status === 'pending' && (
                                   <button 
                                     onClick={() => handleUpdateMessageStatus(m.id, 'read')}
-                                    className="text-[9px] uppercase font-bold text-[#90EE90] hover:underline"
+                                    className="text-xs uppercase font-bold text-[#90EE90] hover:underline"
                                   >
                                     Mark as Read
                                   </button>
                                 )}
                                 <button 
                                   onClick={() => handleDeleteMessage(m.id)}
-                                  className="text-[9px] uppercase font-bold text-red-400 hover:underline"
+                                  className="text-xs uppercase font-bold text-red-400 hover:underline"
                                 >
                                   Delete
                                 </button>
@@ -1581,7 +1581,7 @@ export default function App() {
                         );
                       })}
                       {messages.length === 0 && (
-                        <p className="text-center text-xs opacity-50 py-8">No messages found.</p>
+                        <p className="text-center text-sm opacity-50 py-8">No messages found.</p>
                       )}
                     </>
                   )}
@@ -1608,12 +1608,12 @@ export default function App() {
 
                 <form onSubmit={handleSendRequest} className="space-y-4">
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Planet (Required)</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">Planet (Required)</label>
                     <select 
                       required
                       value={requestPlanetId}
                       onChange={(e) => setRequestPlanetId(e.target.value)}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90]"
                     >
                       <option value="">Select Planet...</option>
                       {planets.map(p => (
@@ -1623,31 +1623,31 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Your Name (Optional)</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">Your Name (Optional)</label>
                     <input 
                       type="text"
                       value={requestSenderName}
                       onChange={(e) => setRequestSenderName(e.target.value)}
                       placeholder="Anonymous"
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90]"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Message (Required)</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">Message (Required)</label>
                     <textarea 
                       required
                       value={requestContent}
                       onChange={(e) => setRequestContent(e.target.value)}
                       placeholder="Type your message here..."
                       rows={4}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90] resize-none"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90] resize-none"
                     />
                   </div>
 
                   <button 
                     type="submit"
-                    className="w-full bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded uppercase tracking-wider hover:opacity-90 transition-opacity"
+                    className="w-full bg-[#90EE90] text-[#2A2A2A] py-2 text-sm font-bold rounded uppercase tracking-wider hover:opacity-90 transition-opacity"
                   >
                     Send Request
                   </button>
@@ -1670,22 +1670,22 @@ export default function App() {
                 <h2 className="text-lg font-bold mb-4 uppercase tracking-tight">Edit Drop</h2>
                 <form onSubmit={handleAddDrop} className="space-y-4">
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Planet</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">Planet</label>
                     <select 
                       required value={newDrop.planet_id}
                       onChange={(e) => setNewDrop(prev => ({ ...prev, planet_id: e.target.value }))}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                     >
                       <option value="">Select Planet...</option>
                       {planets.map(p => <option key={p.id} value={p.id}>{p.name} (R{p.ring})</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Category</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">Category</label>
                     <select 
                       value={newDrop.category}
                       onChange={(e) => setNewDrop(prev => ({ ...prev, category: e.target.value as TechCategory }))}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                     >
                       {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
@@ -1693,7 +1693,7 @@ export default function App() {
                   
                   {newDrop.planet_id && newDrop.category && getDropsForPlanet(newDrop.planet_id, newDrop.category).length > 0 && (
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Action</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Action</label>
                       <select 
                         value={newDrop.id}
                         onChange={(e) => {
@@ -1715,7 +1715,7 @@ export default function App() {
                             }
                           }
                         }}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                       >
                         {(['WU', 'MU', 'SU', 'CU'].includes(newDrop.category) || (['Amarna', 'Soris', 'Giza'].includes(newDrop.category) && getDropsForPlanet(newDrop.planet_id, newDrop.category).length >= 3)) ? null : <option value="">-- Add New --</option>}
                         {getDropsForPlanet(newDrop.planet_id, newDrop.category).map(d => (
@@ -1725,48 +1725,48 @@ export default function App() {
                     </div>
                   )}
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">System</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">System</label>
                     <select 
                       required value={newDrop.system}
                       onChange={(e) => updateTechName(e.target.value, newDrop.type, newDrop.item)}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                     >
                       <option value="">Select System...</option>
                       {['Vega', 'Antares', 'Gemini', 'Mizar', 'Sol', 'Draconis', 'Sirius'].map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Type</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">Type</label>
                     <select 
                       required value={newDrop.type}
                       onChange={(e) => updateTechName(newDrop.system, e.target.value, newDrop.item)}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                     >
                       <option value="">Select Type...</option>
                       {['Rapid', 'Long', 'Normal', 'Strong'].map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Item</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">Item</label>
                     <select 
                       required value={newDrop.item}
                       onChange={(e) => updateTechName(newDrop.system, newDrop.type, e.target.value)}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                     >
                       <option value="">Select Item...</option>
                       {(newDrop.category && CATEGORY_ITEMS[newDrop.category] ? CATEGORY_ITEMS[newDrop.category] : Object.keys(ITEM_ICONS)).map(item => <option key={item} value={item}>{item}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase opacity-50 block mb-1">Tech Name (Auto)</label>
+                    <label className="text-[13px] uppercase opacity-50 block mb-1">Tech Name (Auto)</label>
                     <input 
                       type="text" readOnly value={newDrop.tech_name}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none opacity-50"
+                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none opacity-50"
                     />
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-[#333] py-2 text-xs font-bold rounded">Cancel</button>
-                    <button type="submit" className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded">Save Drop</button>
+                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-[#333] py-2 text-[13px] font-bold rounded">Cancel</button>
+                    <button type="submit" className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-[13px] font-bold rounded">Save Drop</button>
                   </div>
                 </form>
               </motion.div>
@@ -1791,40 +1791,40 @@ export default function App() {
                 <form onSubmit={handleUpdatePlanet} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Planet Name</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Planet Name</label>
                       <input 
                         type="text" required value={editingPlanet.name}
                         onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90]"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Requester</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Requester</label>
                       <input 
                         type="text" value={editingPlanet.requester || ''}
                         onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, requester: e.target.value }) : null)}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90]"
                         placeholder="Optional"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Ring</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Ring</label>
                       <select 
                         value={editingPlanet.ring}
                         onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, ring: Number(e.target.value) }) : null)}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                       >
                         {[5, 4, 3, 2, 1].map(r => <option key={r} value={r}>Ring {r}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Status</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Status</label>
                       <select 
                         value={editingPlanet.status}
                         onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, status: e.target.value as any }) : null)}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                       >
                         <option value="Active">Active</option>
                         <option value="Collapsed">Collapsed</option>
@@ -1833,21 +1833,21 @@ export default function App() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Enemy</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Enemy</label>
                       <select 
                         value={editingPlanet.enemy || '-'}
                         onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, enemy: e.target.value }) : null)}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                       >
                         {ENEMY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Quarcs</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Quarcs</label>
                       <select 
                         value={editingPlanet.quarcs || '-'}
                         onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, quarcs: e.target.value }) : null)}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                       >
                         {QUARCS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
@@ -1855,7 +1855,7 @@ export default function App() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Collapse Time</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Collapse Time</label>
                       <input 
                         type="datetime-local"
                         value={formatForInput(editingPlanet.collapse_time)}
@@ -1873,16 +1873,16 @@ export default function App() {
                             return { ...prev, collapse_time: newCollapse, respawn_time: newRespawn };
                           });
                         }}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90]"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase opacity-50 block mb-1">Respawn Time</label>
+                      <label className="text-[13px] uppercase opacity-50 block mb-1">Respawn Time</label>
                       <input 
                         type="datetime-local"
                         value={formatForInput(editingPlanet.respawn_time)}
                         onChange={(e) => setEditingPlanet(prev => prev ? ({ ...prev, respawn_time: e.target.value }) : null)}
-                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none focus:border-[#90EE90]"
+                        className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90]"
                       />
                     </div>
                   </div>
@@ -1890,13 +1890,13 @@ export default function App() {
                     <button 
                       type="button" 
                       onClick={() => setEditingPlanet(null)}
-                      className="flex-1 bg-[#333] text-white py-2 text-xs font-bold rounded uppercase"
+                      className="flex-1 bg-[#333] text-white py-2 text-sm font-bold rounded uppercase"
                     >
                       Cancel
                     </button>
                     <button 
                       type="submit" 
-                      className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-xs font-bold rounded uppercase"
+                      className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-sm font-bold rounded uppercase"
                     >
                       Save Changes
                     </button>
