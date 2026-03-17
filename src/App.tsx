@@ -94,6 +94,16 @@ const ITEM_ICONS: Record<string, string> = {
   'Color Pattern': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/pattern.png',
 };
 
+const CATEGORY_ITEMS: Record<string, string[]> = {
+  'WU': ['Collector', 'Color Pattern'],
+  'MU': ['Repair Droid', 'Afterburner'],
+  'SU': ['Blaster', 'Repair Target', 'Taunt', 'Aggro Beacon'],
+  'CU': ['Speed Actuator', 'Protector', 'Perforator', 'Aim Scrambler', 'Attack Charge', 'Repair Turret', 'Attack Turret'],
+  'Amarna': ['Rocket', 'Shield', 'Aim Computer', 'Stun Charge', 'Repair Field', 'Thermoblast', 'Aggro Bomb', 'Materializer', 'Stun Dome', 'Sniper Blaster', 'Attack Droid', 'Orbital Strike', 'Sticky Bomb', 'Minelayer'],
+  'Soris': ['Rocket', 'Shield', 'Aim Computer', 'Stun Charge', 'Repair Field', 'Thermoblast', 'Aggro Bomb', 'Materializer', 'Stun Dome', 'Sniper Blaster', 'Attack Droid', 'Orbital Strike', 'Sticky Bomb', 'Minelayer'],
+  'Giza': ['Rocket', 'Shield', 'Aim Computer', 'Stun Charge', 'Repair Field', 'Thermoblast', 'Aggro Bomb', 'Materializer', 'Stun Dome', 'Sniper Blaster', 'Attack Droid', 'Orbital Strike', 'Sticky Bomb', 'Minelayer']
+};
+
 const getAbbreviation = (system: string, type: string) => {
   const sysMap: Record<string, string> = {
     'Vega': 'V', 'Antares': 'A', 'Gemini': 'G', 'Mizar': 'M', 'Sol': 'So', 'Draconis': 'D', 'Sirius': 'Si'
@@ -823,6 +833,16 @@ export default function App() {
     }
 
     const techNames = value.split('\n').filter(t => t.trim() !== '');
+    
+    const allowedItems = CATEGORY_ITEMS[category] || Object.keys(ITEM_ICONS);
+    for (const tech of techNames) {
+      const parsed = parseTechName(tech);
+      if (parsed.item && !allowedItems.includes(parsed.item)) {
+        alert(`Item "${parsed.item}" is not allowed in category ${category}. Allowed items: ${allowedItems.join(', ')}`);
+        return;
+      }
+    }
+
     const { error: deleteError } = await supabase.from('drops').delete().eq('planet_id', planet_id).eq('category', category);
     
     if (deleteError) {
@@ -1734,7 +1754,7 @@ export default function App() {
                       className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-xs rounded focus:outline-none"
                     >
                       <option value="">Select Item...</option>
-                      {Object.keys(ITEM_ICONS).map(item => <option key={item} value={item}>{item}</option>)}
+                      {(newDrop.category && CATEGORY_ITEMS[newDrop.category] ? CATEGORY_ITEMS[newDrop.category] : Object.keys(ITEM_ICONS)).map(item => <option key={item} value={item}>{item}</option>)}
                     </select>
                   </div>
                   <div>
