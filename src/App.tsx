@@ -1398,19 +1398,29 @@ export default function App() {
                       );
                     })()}
                   </div>
-                  <div className="flex gap-3 pt-2">
+                  <div className="flex gap-2 pt-2">
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        updateTechField(editingDrop.planetId, editingDrop.category, '');
+                        setEditingDrop(null);
+                      }}
+                      className="flex-1 bg-red-500/20 text-red-500 py-2 text-sm font-bold rounded uppercase hover:bg-red-500/30 transition-colors"
+                    >
+                      Clear
+                    </button>
                     <button 
                       type="button" 
                       onClick={() => setEditingDrop(null)}
-                      className="flex-1 bg-[#333] text-white py-2 text-sm font-bold rounded uppercase"
+                      className="flex-1 bg-[#333] text-white py-2 text-sm font-bold rounded uppercase hover:bg-[#444] transition-colors"
                     >
                       Cancel
                     </button>
                     <button 
                       type="submit" 
-                      className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-sm font-bold rounded uppercase"
+                      className="flex-1 bg-[#90EE90] text-[#2A2A2A] py-2 text-sm font-bold rounded uppercase hover:bg-[#7bc87b] transition-colors"
                     >
-                      Save Changes
+                      Save
                     </button>
                   </div>
                 </form>
