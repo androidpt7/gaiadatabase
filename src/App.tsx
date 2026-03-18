@@ -1222,7 +1222,7 @@ export default function App() {
                                       {(() => {
                                         const iconKey = parsed.item;
                                         return ITEM_ICONS[iconKey] ? (
-                                          <img src={ITEM_ICONS[iconKey]} alt={parsed.item} className="w-3 h-3 object-contain" referrerPolicy="no-referrer" />
+                                          <img src={ITEM_ICONS[iconKey]} alt={parsed.item} className="w-[18px] h-[18px] object-contain" referrerPolicy="no-referrer" />
                                         ) : null;
                                       })()}
                                       <span className={parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
@@ -1242,7 +1242,7 @@ export default function App() {
                                     {(() => {
                                       const iconKey = parsed.item;
                                       return ITEM_ICONS[iconKey] ? (
-                                        <img src={ITEM_ICONS[iconKey]} alt={parsed.item} className="w-3 h-3 object-contain" referrerPolicy="no-referrer" />
+                                        <img src={ITEM_ICONS[iconKey]} alt={parsed.item} className="w-[18px] h-[18px] object-contain" referrerPolicy="no-referrer" />
                                       ) : null;
                                     })()}
                                     <span className={parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
@@ -1377,6 +1377,9 @@ export default function App() {
                                   }}
                                   className="rounded bg-[#2A2A2A] border-[#444] text-[#90EE90] focus:ring-[#90EE90]"
                                 />
+                                {ITEM_ICONS[item] && (
+                                  <img src={ITEM_ICONS[item]} alt={item} className="w-[18px] h-[18px] object-contain" referrerPolicy="no-referrer" />
+                                )}
                                 <span className="text-sm">{item}</span>
                               </label>
                             ))}
