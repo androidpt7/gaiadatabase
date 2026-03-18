@@ -31,7 +31,8 @@ const parseTechName = (techName: string) => {
   if (!techName) return { system: '', type: 'Normal', item: '' };
 
   const sysMapRev: Record<string, string> = {
-    'V': 'Vega', 'A': 'Antares', 'G': 'Gemini', 'M': 'Mizar', 'So': 'Sol', 'D': 'Draconis', 'Si': 'Sirius'
+    'V': 'Vega', 'A': 'Antares', 'G': 'Gemini', 'M': 'Mizar', 'So': 'Sol', 'D': 'Draconis', 'Si': 'Sirius',
+    'Ecoglyte': 'Ecoglyte', 'Oolyte': 'Oolyte', 'Dolomyte': 'Dolomyte', 'Kenyte': 'Kenyte', 'Clay': 'Clay'
   };
   const typeMapRev: Record<string, string> = {
     'R': 'Rapid', 'L': 'Long', 'St': 'Strong'
@@ -104,9 +105,20 @@ const CATEGORY_ITEMS: Record<string, string[]> = {
   'Giza': ['Rocket', 'Shield', 'Aim Computer', 'Stun Charge', 'Repair Field', 'Thermoblast', 'Aggro Bomb', 'Materializer', 'Stun Dome', 'Sniper Blaster', 'Attack Droid', 'Orbital Strike', 'Sticky Bomb', 'Minelayer']
 };
 
+const RING_1_4_CATEGORY_ITEMS: Record<string, string[]> = {
+  'WU': ['Color Pattern'],
+  'MU': ['Collector', 'Repair Target', 'Taunt', 'Perforator', 'Aggro Beacon', 'Attack Charge', 'Repair Turret'],
+  'SU': ['Afterburner', 'Speed Actuator', 'Aim Computer', 'Protector', 'Aim Scrambler', 'Attack Droid', 'Attack Turret'],
+  'CU': ['Blaster', 'Repair Droid', 'Rocket', 'Shield', 'Stun Charge', 'Repair Field', 'Thermoblast', 'Aggro Bomb', 'Materializer', 'Stun Dome', 'Sniper Blaster', 'Orbital Strike', 'Sticky Bomb', 'Minelayer'],
+  'Amarna': [],
+  'Soris': [],
+  'Giza': []
+};
+
 const getAbbreviation = (system: string, type: string) => {
   const sysMap: Record<string, string> = {
-    'Vega': 'V', 'Antares': 'A', 'Gemini': 'G', 'Mizar': 'M', 'Sol': 'So', 'Draconis': 'D', 'Sirius': 'Si'
+    'Vega': 'V', 'Antares': 'A', 'Gemini': 'G', 'Mizar': 'M', 'Sol': 'So', 'Draconis': 'D', 'Sirius': 'Si',
+    'Ecoglyte': 'Ecoglyte', 'Oolyte': 'Oolyte', 'Dolomyte': 'Dolomyte', 'Kenyte': 'Kenyte', 'Clay': 'Clay'
   };
   const typeMap: Record<string, string> = {
     'Rapid': 'R', 'Long': 'L', 'Normal': '', 'Strong': 'St'
@@ -254,12 +266,29 @@ export default function App() {
     }
   }, [newDrop.planet_id, newDrop.category, drops]);
 
-  const updateTechName = (system: string, type: string, item: string) => {
-    const abbr = getAbbreviation(system, type);
+  const updateTechName = (system: string, type: string, item: string, planetId?: string) => {
+    const pId = planetId || newDrop.planet_id;
+    const planet = planets.find(p => p.id === pId);
+    let abbr = getAbbreviation(system, type);
+    let finalSystem = system;
+    let finalType = type;
+    
+    if (planet && planet.ring <= 4) {
+      const ringPrefixes: Record<number, string> = {
+        1: 'Ecoglyte',
+        2: 'Oolyte',
+        3: 'Dolomyte',
+        4: 'Kenyte'
+      };
+      abbr = ringPrefixes[planet.ring] || '';
+      finalSystem = abbr;
+      finalType = 'Normal';
+    }
+    
     setNewDrop(prev => ({ 
       ...prev, 
-      system, 
-      type, 
+      system: finalSystem, 
+      type: finalType, 
       item,
       tech_name: `${abbr} ${item}`.trim() 
     }));
@@ -834,7 +863,10 @@ export default function App() {
 
     const techNames = value.split('\n').filter(t => t.trim() !== '');
     
-    const allowedItems = CATEGORY_ITEMS[category] || Object.keys(ITEM_ICONS);
+    const allowedItems = planet && planet.ring <= 4 
+      ? (RING_1_4_CATEGORY_ITEMS[category] || Object.keys(ITEM_ICONS))
+      : (CATEGORY_ITEMS[category] || Object.keys(ITEM_ICONS));
+      
     for (const tech of techNames) {
       const parsed = parseTechName(tech);
       if (parsed.item && !allowedItems.includes(parsed.item)) {
@@ -1315,13 +1347,53 @@ export default function App() {
                 >
                   <div>
                     <label className="text-[13px] uppercase opacity-50 block mb-1">Technologies (one per line)</label>
-                    <textarea 
-                      value={editingDrop.initialValue}
-                      onChange={(e) => setEditingDrop(prev => prev ? ({ ...prev, initialValue: e.target.value }) : null)}
-                      rows={['Amarna', 'Soris', 'Giza'].includes(editingDrop.category) ? 3 : 2}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90] resize-none"
-                      placeholder="e.g. WU 1&#10;WU 2"
-                    />
+                    {(() => {
+                      const planet = planets.find(p => p.id === editingDrop.planetId);
+                      if (planet && planet.ring <= 4) {
+                        const allowedItems = RING_1_4_CATEGORY_ITEMS[editingDrop.category] || Object.keys(ITEM_ICONS);
+                        const currentItems = editingDrop.initialValue.split('\n').filter(t => t.trim() !== '').map(t => parseTechName(t).item);
+                        
+                        const ringPrefixes: Record<number, string> = {
+                          1: 'Ecoglyte',
+                          2: 'Oolyte',
+                          3: 'Dolomyte',
+                          4: 'Kenyte'
+                        };
+                        const prefix = ringPrefixes[planet.ring] || '';
+                        
+                        return (
+                          <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                            {allowedItems.map(item => (
+                              <label key={item} className="flex items-center gap-2 cursor-pointer p-1 hover:bg-[#333] rounded">
+                                <input 
+                                  type="checkbox" 
+                                  checked={currentItems.includes(item)}
+                                  onChange={(e) => {
+                                    const newItems = e.target.checked 
+                                      ? [...currentItems, item] 
+                                      : currentItems.filter(i => i !== item);
+                                    const newValue = newItems.map(i => `${prefix} ${i}`).join('\n');
+                                    setEditingDrop(prev => prev ? ({ ...prev, initialValue: newValue }) : null);
+                                  }}
+                                  className="rounded bg-[#2A2A2A] border-[#444] text-[#90EE90] focus:ring-[#90EE90]"
+                                />
+                                <span className="text-sm">{item}</span>
+                              </label>
+                            ))}
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <textarea 
+                          value={editingDrop.initialValue}
+                          onChange={(e) => setEditingDrop(prev => prev ? ({ ...prev, initialValue: e.target.value }) : null)}
+                          rows={['Amarna', 'Soris', 'Giza'].includes(editingDrop.category) ? 3 : 2}
+                          className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none focus:border-[#90EE90] resize-none"
+                          placeholder="e.g. WU 1\nWU 2"
+                        />
+                      );
+                    })()}
                   </div>
                   <div className="flex gap-3 pt-2">
                     <button 
@@ -1689,7 +1761,10 @@ export default function App() {
                     <label className="text-[13px] uppercase opacity-50 block mb-1">Planet</label>
                     <select 
                       required value={newDrop.planet_id}
-                      onChange={(e) => setNewDrop(prev => ({ ...prev, planet_id: e.target.value }))}
+                      onChange={(e) => {
+                        setNewDrop(prev => ({ ...prev, planet_id: e.target.value }));
+                        updateTechName(newDrop.system, newDrop.type, newDrop.item, e.target.value);
+                      }}
                       className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                     >
                       <option value="">Select Planet...</option>
@@ -1740,28 +1815,32 @@ export default function App() {
                       </select>
                     </div>
                   )}
-                  <div>
-                    <label className="text-[13px] uppercase opacity-50 block mb-1">System</label>
-                    <select 
-                      required value={newDrop.system}
-                      onChange={(e) => updateTechName(e.target.value, newDrop.type, newDrop.item)}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
-                    >
-                      <option value="">Select System...</option>
-                      {['Vega', 'Antares', 'Gemini', 'Mizar', 'Sol', 'Draconis', 'Sirius'].map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[13px] uppercase opacity-50 block mb-1">Type</label>
-                    <select 
-                      required value={newDrop.type}
-                      onChange={(e) => updateTechName(newDrop.system, e.target.value, newDrop.item)}
-                      className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
-                    >
-                      <option value="">Select Type...</option>
-                      {['Rapid', 'Long', 'Normal', 'Strong'].map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </div>
+                  {(!newDrop.planet_id || (planets.find(p => p.id === newDrop.planet_id)?.ring || 5) > 4) && (
+                    <>
+                      <div>
+                        <label className="text-[13px] uppercase opacity-50 block mb-1">System</label>
+                        <select 
+                          required value={newDrop.system}
+                          onChange={(e) => updateTechName(e.target.value, newDrop.type, newDrop.item)}
+                          className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
+                        >
+                          <option value="">Select System...</option>
+                          {['Vega', 'Antares', 'Gemini', 'Mizar', 'Sol', 'Draconis', 'Sirius'].map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[13px] uppercase opacity-50 block mb-1">Type</label>
+                        <select 
+                          required value={newDrop.type}
+                          onChange={(e) => updateTechName(newDrop.system, e.target.value, newDrop.item)}
+                          className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
+                        >
+                          <option value="">Select Type...</option>
+                          {['Rapid', 'Long', 'Normal', 'Strong'].map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                    </>
+                  )}
                   <div>
                     <label className="text-[13px] uppercase opacity-50 block mb-1">Item</label>
                     <select 
@@ -1770,7 +1849,12 @@ export default function App() {
                       className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                     >
                       <option value="">Select Item...</option>
-                      {(newDrop.category && CATEGORY_ITEMS[newDrop.category] ? CATEGORY_ITEMS[newDrop.category] : Object.keys(ITEM_ICONS)).map(item => <option key={item} value={item}>{item}</option>)}
+                      {(() => {
+                        const planet = planets.find(p => p.id === newDrop.planet_id);
+                        const itemsMap = planet && planet.ring <= 4 ? RING_1_4_CATEGORY_ITEMS : CATEGORY_ITEMS;
+                        const items = newDrop.category && itemsMap[newDrop.category] ? itemsMap[newDrop.category] : Object.keys(ITEM_ICONS);
+                        return items.map(item => <option key={item} value={item}>{item}</option>);
+                      })()}
                     </select>
                   </div>
                   <div>
