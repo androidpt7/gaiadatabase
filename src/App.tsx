@@ -59,6 +59,10 @@ const parseTechName = (techName: string) => {
     item = item.slice(0, -1);
   }
 
+  if (item.startsWith('Ancient ')) {
+    type = 'Ships';
+  }
+
   return { system, type, item };
 };
 
@@ -93,6 +97,12 @@ const ITEM_ICONS: Record<string, string> = {
   'Sticky Bomb': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/sticky_bomb.png',
   'Minelayer': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/mine.png',
   'Color Pattern': 'https://raw.githubusercontent.com/androidpt7/itempg/main/icons/pattern.png',
+  'Ancient Ghost': 'https://github.com/androidpt7/itempg/blob/main/icons/Ghost.png?raw=true',
+  'Ancient Raven': 'https://github.com/androidpt7/itempg/blob/main/icons/Raven.png?raw=true',
+  'Ancient Punisher': 'https://github.com/androidpt7/itempg/blob/main/icons/Punisher.png?raw=true',
+  'Ancient Raider': 'https://github.com/androidpt7/itempg/blob/main/icons/Raider.png?raw=true',
+  'Ancient Legionary': 'https://github.com/androidpt7/itempg/blob/main/icons/Legionary.png?raw=true',
+  'Ancient Myst': 'https://github.com/androidpt7/itempg/blob/main/icons/Myst.png?raw=true',
 };
 
 const CATEGORY_ITEMS: Record<string, string[]> = {
@@ -100,9 +110,9 @@ const CATEGORY_ITEMS: Record<string, string[]> = {
   'MU': ['Repair Droid', 'Afterburner'],
   'SU': ['Blaster', 'Repair Target', 'Taunt', 'Aggro Beacon'],
   'CU': ['Speed Actuator', 'Protector', 'Perforator', 'Aim Scrambler', 'Attack Charge', 'Repair Turret', 'Attack Turret'],
-  'Amarna': ['Rocket', 'Shield', 'Aim Computer', 'Stun Charge', 'Repair Field', 'Thermoblast', 'Aggro Bomb', 'Materializer', 'Stun Dome', 'Sniper Blaster', 'Attack Droid', 'Orbital Strike', 'Sticky Bomb', 'Minelayer'],
-  'Soris': ['Rocket', 'Shield', 'Aim Computer', 'Stun Charge', 'Repair Field', 'Thermoblast', 'Aggro Bomb', 'Materializer', 'Stun Dome', 'Sniper Blaster', 'Attack Droid', 'Orbital Strike', 'Sticky Bomb', 'Minelayer'],
-  'Giza': ['Rocket', 'Shield', 'Aim Computer', 'Stun Charge', 'Repair Field', 'Thermoblast', 'Aggro Bomb', 'Materializer', 'Stun Dome', 'Sniper Blaster', 'Attack Droid', 'Orbital Strike', 'Sticky Bomb', 'Minelayer']
+  'Amarna': ['Rocket', 'Shield', 'Aim Computer', 'Stun Charge', 'Repair Field', 'Thermoblast', 'Aggro Bomb', 'Materializer', 'Stun Dome', 'Sniper Blaster', 'Attack Droid', 'Orbital Strike', 'Sticky Bomb', 'Minelayer', 'Ancient Ghost', 'Ancient Raven', 'Ancient Punisher', 'Ancient Raider', 'Ancient Legionary', 'Ancient Myst'],
+  'Soris': ['Rocket', 'Shield', 'Aim Computer', 'Stun Charge', 'Repair Field', 'Thermoblast', 'Aggro Bomb', 'Materializer', 'Stun Dome', 'Sniper Blaster', 'Attack Droid', 'Orbital Strike', 'Sticky Bomb', 'Minelayer', 'Ancient Ghost', 'Ancient Raven', 'Ancient Punisher', 'Ancient Raider', 'Ancient Legionary', 'Ancient Myst'],
+  'Giza': ['Rocket', 'Shield', 'Aim Computer', 'Stun Charge', 'Repair Field', 'Thermoblast', 'Aggro Bomb', 'Materializer', 'Stun Dome', 'Sniper Blaster', 'Attack Droid', 'Orbital Strike', 'Sticky Bomb', 'Minelayer', 'Ancient Ghost', 'Ancient Raven', 'Ancient Punisher', 'Ancient Raider', 'Ancient Legionary', 'Ancient Myst']
 };
 
 const RING_1_4_CATEGORY_ITEMS: Record<string, string[]> = {
@@ -121,7 +131,7 @@ const getAbbreviation = (system: string, type: string) => {
     'Ecoglyte': 'Ecoglyte', 'Oolyte': 'Oolyte', 'Dolomyte': 'Dolomyte', 'Kenyte': 'Kenyte', 'Clay': 'Clay'
   };
   const typeMap: Record<string, string> = {
-    'Rapid': 'R', 'Long': 'L', 'Normal': '', 'Strong': 'St'
+    'Rapid': 'R', 'Long': 'L', 'Normal': '', 'Strong': 'St', 'Ships': ''
   };
   return `${sysMap[system] || ''} ${typeMap[type] || ''}`.trim();
 };
@@ -272,6 +282,7 @@ export default function App() {
     let abbr = getAbbreviation(system, type);
     let finalSystem = system;
     let finalType = type;
+    let finalItem = item;
     
     if (planet && planet.ring <= 4) {
       const ringPrefixes: Record<number, string> = {
@@ -284,13 +295,26 @@ export default function App() {
       finalSystem = abbr;
       finalType = 'Normal';
     }
+
+    if (finalType === 'Ships' && finalItem && !finalItem.startsWith('Ancient ')) {
+      finalItem = '';
+    } else if (finalType !== 'Ships' && finalType !== '' && finalItem.startsWith('Ancient ')) {
+      finalItem = '';
+    }
+    
+    let techName = `${abbr} ${finalItem}`.trim();
+    if (finalItem.startsWith('Ancient ')) {
+      techName = finalItem;
+      finalType = 'Ships';
+      finalSystem = '';
+    }
     
     setNewDrop(prev => ({ 
       ...prev, 
       system: finalSystem, 
       type: finalType, 
-      item,
-      tech_name: `${abbr} ${item}`.trim() 
+      item: finalItem,
+      tech_name: techName 
     }));
   };
 
@@ -682,7 +706,8 @@ export default function App() {
 
   const handleAddDrop = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newDrop.planet_id || !newDrop.tech_name || !newDrop.system || !newDrop.type || !newDrop.item) return;
+    if (!user || !newDrop.planet_id || !newDrop.tech_name || !newDrop.item) return;
+    if (!newDrop.item.startsWith('Ancient ') && (!newDrop.system || !newDrop.type)) return;
 
     try {
       if (newDrop.id) {
@@ -1225,7 +1250,7 @@ export default function App() {
                                           <img src={ITEM_ICONS[iconKey]} alt={parsed.item} className="w-[18px] h-[18px] object-contain" referrerPolicy="no-referrer" />
                                         ) : null;
                                       })()}
-                                      <span className={parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
+                                      <span className={parsed.item.startsWith('Ancient ') ? 'text-purple-500' : parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
                                     </div>
                                   );
                                 })
@@ -1245,7 +1270,7 @@ export default function App() {
                                         <img src={ITEM_ICONS[iconKey]} alt={parsed.item} className="w-[18px] h-[18px] object-contain" referrerPolicy="no-referrer" />
                                       ) : null;
                                     })()}
-                                    <span className={parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
+                                    <span className={parsed.item.startsWith('Ancient ') ? 'text-purple-500' : parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
                                   </div>
                                 );
                               })}
@@ -1833,7 +1858,7 @@ export default function App() {
                       <div>
                         <label className="text-[13px] uppercase opacity-50 block mb-1">System</label>
                         <select 
-                          required value={newDrop.system}
+                          required={!newDrop.item.startsWith('Ancient ')} value={newDrop.system}
                           onChange={(e) => updateTechName(e.target.value, newDrop.type, newDrop.item)}
                           className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                         >
@@ -1844,12 +1869,12 @@ export default function App() {
                       <div>
                         <label className="text-[13px] uppercase opacity-50 block mb-1">Type</label>
                         <select 
-                          required value={newDrop.type}
+                          required={!newDrop.item.startsWith('Ancient ')} value={newDrop.type}
                           onChange={(e) => updateTechName(newDrop.system, e.target.value, newDrop.item)}
                           className="w-full bg-[#2A2A2A] border border-[#333] p-2 text-sm rounded focus:outline-none"
                         >
                           <option value="">Select Type...</option>
-                          {['Rapid', 'Long', 'Normal', 'Strong'].map(t => <option key={t} value={t}>{t}</option>)}
+                          {['Rapid', 'Long', 'Normal', 'Strong', 'Ships'].map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                       </div>
                     </>
@@ -1865,7 +1890,14 @@ export default function App() {
                       {(() => {
                         const planet = planets.find(p => p.id === newDrop.planet_id);
                         const itemsMap = planet && planet.ring <= 4 ? RING_1_4_CATEGORY_ITEMS : CATEGORY_ITEMS;
-                        const items = newDrop.category && itemsMap[newDrop.category] ? itemsMap[newDrop.category] : Object.keys(ITEM_ICONS);
+                        let items = newDrop.category && itemsMap[newDrop.category] ? itemsMap[newDrop.category] : Object.keys(ITEM_ICONS);
+                        
+                        if (newDrop.type === 'Ships') {
+                          items = items.filter(item => item.startsWith('Ancient '));
+                        } else if (newDrop.type !== '') {
+                          items = items.filter(item => !item.startsWith('Ancient '));
+                        }
+                        
                         return items.map(item => <option key={item} value={item}>{item}</option>);
                       })()}
                     </select>
