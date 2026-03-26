@@ -1250,7 +1250,7 @@ export default function App() {
                                           <img src={ITEM_ICONS[iconKey]} alt={parsed.item} className="w-[18px] h-[18px] object-contain" referrerPolicy="no-referrer" />
                                         ) : null;
                                       })()}
-                                      <span className={parsed.item.startsWith('Ancient ') ? 'text-purple-500' : parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
+                                      <span className={parsed.item.startsWith('Ancient ') ? 'text-purple-500' : (parsed.system === 'Sirius' && parsed.item !== 'Color Pattern') ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
                                     </div>
                                   );
                                 })
@@ -1270,7 +1270,7 @@ export default function App() {
                                         <img src={ITEM_ICONS[iconKey]} alt={parsed.item} className="w-[18px] h-[18px] object-contain" referrerPolicy="no-referrer" />
                                       ) : null;
                                     })()}
-                                    <span className={parsed.item.startsWith('Ancient ') ? 'text-purple-500' : parsed.system === 'Sirius' ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
+                                    <span className={parsed.item.startsWith('Ancient ') ? 'text-purple-500' : (parsed.system === 'Sirius' && parsed.item !== 'Color Pattern') ? 'text-orange-500' : ''}>{formatTechName(drop.tech_name)}</span>
                                   </div>
                                 );
                               })}
